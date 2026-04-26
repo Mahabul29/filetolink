@@ -1,15 +1,27 @@
 import os
-from os import getenv
 
 class Var(object):
-    API_ID = int(getenv('API_ID', '0'))
-    API_HASH = getenv('API_HASH', '')
-    BOT_TOKEN = getenv('BOT_TOKEN', '')
-    DATABASE_URL = getenv('DATABASE_URL', '')
-    BIN_CHANNEL = int(getenv('BIN_CHANNEL', '0'))
+    # API Credentials
+    API_ID = 23787292
+    API_HASH = "679f843b6d9485bead1b81852a9634f4"
+    BOT_TOKEN = "8612139825:AAGe7npb_imXopdOhXXRbSwnreDp3_HwnVo"
     
-    # Koyeb Config
-    PORT = int(getenv('PORT', '8080'))
-    FQDN = getenv('FQDN', '0.0.0.0')
-    HAS_SSL = getenv('HAS_SSL', 'True').lower() in ('true', '1', 'yes')
+    # Database & Essential Logs
+    DATABASE_URL = "mongodb+srv://mahabul201:Mahbul288550@mahabul201.83adx.mongodb.net/?retryWrites=true&w=majority&appName=Mahabul201"
+    BIN_CHANNEL = -1002384901959
+    LOG_CHANNEL = -1002485776908
+    
+    # Admin Info & Identity
+    OWNER_ID = 5733685945
+    name = "FileToLinkBot"
+    
+    # Koyeb Web Settings
+    PORT = 8080
+    FQDN = "faint-darya-mahavayst-636a2272.koyeb.app"
+    URL = f"https://{FQDN}/"
+    
+    # Simple Switches
+    FSUB = False
+    VERIFY = False
+    HAS_SSL = True
     
