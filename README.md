@@ -1,61 +1,51 @@
-# 🚀 File-to-Link Bot (Koyeb Optimized)
+# 🚀 File-to-Link Bot (Private Version)
 
-A powerful Telegram bot that allows you to download Telegram files directly via your Chrome browser by generating a direct streaming/download link. This version is optimized for personal use, removing all monetization and verification hurdles.
+A lightweight Telegram bot designed to convert Telegram files into direct, high-speed download links. These links can be opened in **Google Chrome** or any browser to download files directly to your device without needing the Telegram app.
 
-## 🌟 Features
-- **Fast Link Generation**: Get direct download links instantly.
-- **Chrome Compatible**: Works perfectly with browser download managers.
-- **Private Mode**: Only you (the Admin) can generate links.
-- **No Monetization**: No shortlinks, no ads, no verification.
-- **Koyeb Ready**: Pre-configured to run on Koyeb without crashing.
+## 🛠 Features
+- **Direct Downloads**: Generates links that work instantly in browsers like Chrome.
+- **Personal Use Only**: Clean code with no ads, no shortlinks, and no verification systems.
+- **Koyeb Optimized**: Specifically configured to prevent crashes during deployment on Koyeb.
+- **Secure**: Uses SSL (HTTPS) for safe file streaming.
 
 ---
 
-## 🛠 Setup & Environment Variables
+## ⚙️ Essential Configuration
 
-To get this bot running, you need to add the following variables to your **Koyeb Service Settings**.
+Add these **Environment Variables** in your Koyeb dashboard to get the bot running:
 
-### 🔑 Required (The "Must-Haves")
+### 1. The Basics (Required)
 | Variable | Description |
 | :--- | :--- |
-| `API_ID` | Your Telegram API ID from [my.telegram.org](https://my.telegram.org) |
-| `API_HASH` | Your Telegram API Hash from [my.telegram.org](https://my.telegram.org) |
-| `BOT_TOKEN` | Your Bot Token from [@BotFather](https://t.me/BotFather) |
-| `DATABASE_URL` | Your MongoDB connection string (Atlas recommended) |
-| `BIN_CHANNEL` | A private Telegram channel ID where the bot stores files (e.g., `-100...`) |
+| `API_ID` | Your API ID from my.telegram.org |
+| `API_HASH` | Your API Hash from my.telegram.org |
+| `BOT_TOKEN` | Your token from @BotFather |
+| `DATABASE_URL` | Your MongoDB connection string |
+| `BIN_CHANNEL` | A private channel ID (starting with -100) to store files. |
 
-### ⚙️ System Configuration (Koyeb Specific)
+### 2. The Link Settings (Crucial)
 | Variable | Value | Description |
 | :--- | :--- | :--- |
-| `FQDN` | `your-app.koyeb.app` | Paste your public Koyeb app URL here. |
-| `PORT` | `8080` | The internal port the bot listens on. |
-| `NO_PORT` | `True` | Set to True so Koyeb handles the routing. |
-| `HAS_SSL` | `True` | Ensures links are generated with `https://`. |
-
-### 🚫 Privacy & Anti-Ads (Set these to False)
-| Variable | Value | Description |
-| :--- | :--- | :--- |
-| `VERIFY` | `False` | Disables the "Earn Money/Verify" requirement. |
-| `IS_SHORTLINK` | `False` | Disables all third-party shorteners. |
-| `FSUB` | `False` | Disables mandatory channel join requirement. |
-| `PUBLIC_FILE_STORE`| `False` | Keeps your file links private to the Admin. |
+| `FQDN` | `your-app.koyeb.app` | **CRITICAL:** Paste your actual Koyeb app URL here so Chrome can find the files. |
+| `HAS_SSL` | `True` | Ensures your links start with `https://`. |
+| `PORT` | `8080` | The internal port for the web server. |
 
 ---
 
-## 🚀 How to Deploy on Koyeb
+## 🚀 Deployment Steps
 
-1. **Fork this Repository** to your GitHub account.
-2. **Create a New Service** on Koyeb and select your repository.
-3. **Configure the Environment Variables** listed above in the "Environment Variables" section.
-4. **Deploy!** Once the status turns to `Healthy`, your bot is live.
-
----
-
-## 👤 Admin & Support
-- **Owner ID**: `5733685945` (Update this in `info.py` or via Vars)
-- **Support Group**: [@Hindi_Dub_Animes_Official](https://t.me/Hindi_Dub_Animes_Official)
+1. **Fork** this repository to your GitHub account.
+2. Log in to **Koyeb** and click **"Create Service"**.
+3. Select your GitHub repository.
+4. Add the **Environment Variables** listed above.
+5. Click **Deploy**.
+6. Once deployed, copy the **Public URL** Koyeb gives you and paste it back into the `FQDN` variable in settings.
 
 ---
 
-## 📄 License
-This project is for educational and personal use. Please use responsibly and do not violate Telegram's Terms of Service.
+## 👤 Credits & Support
+- **Developer**: [Mahabul201](https://github.com/Mahabul29)
+- **Support**: [@Hindi_Dub_Animes_Official](https://t.me/Hindi_Dub_Animes_Official)
+
+---
+*Note: This bot is for personal use. It has been stripped of all monetization scripts for a faster, cleaner experience.*
