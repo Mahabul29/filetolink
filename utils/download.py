@@ -1,13 +1,11 @@
 import base64
 from info import Var
 
-async def generate_download_link(message_id):
-    # Encodes the message ID to create a unique URL path
+async def get_download_link(message_id):
+    # Shorten/Encode the ID for the URL
     text = str(message_id).encode("ascii")
-    base64_bytes = base64.urlsafe_b64encode(text)
-    base64_string = base64_bytes.decode("ascii").strip("=")
+    encoded = base64.urlsafe_b64encode(text).decode("ascii").strip("=")
     
-    if Var.HAS_SSL:
-        return f"https://{Var.FQDN}/dl/{base64_string}"
-    return f"http://{Var.FQDN}:{Var.PORT}/dl/{base64_string}"
-  
+    prefix = "https://" if Var.HAS_SSL else "http://"
+    return f"{prefix}{Var.FQDN}/dl/{encoded}"
+    
