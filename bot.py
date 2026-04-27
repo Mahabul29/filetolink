@@ -1,3 +1,4 @@
+
 import logging
 import asyncio
 from pyrogram import Client, filters
@@ -12,7 +13,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# ✅ Use string session if provided, otherwise use bot token
 app = Client(
     "filetolink",
     api_id=API_ID,
@@ -36,19 +36,15 @@ async def main():
         me = await app.get_me()
         logger.info(f"✅ Bot Started as @{me.username}")
 
-        # ✅ Hard fail if BIN_CHANNEL is invalid
         try:
             chat = await app.get_chat(BIN_CHANNEL)
             logger.info(f"✅ BIN_CHANNEL resolved: {chat.title}")
         except Exception as e:
-            logger.error(f"❌ BIN_CHANNEL invalid — stopping bot: {e}")
-            raise SystemExit(1)
+            logger.warning(f"⚠️ BIN_CHANNEL not cached yet (make sure bot is admin): {e}")
 
-        # ✅ Correct call — no argument
         runner = await web_server()
         logger.info(f"🌐 Web server started")
 
-        # ✅ Graceful shutdown on exit
         try:
             await asyncio.Event().wait()
         finally:
