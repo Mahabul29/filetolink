@@ -1,48 +1,66 @@
-import os
-from pyrogram import Client, __version__
-from pyrogram.raw.all import layer
-from info import Var
-from web.server import web_server # Ensure you have created web/server.py
+import logging
+import asyncio
+from pyrogram import Client, filters
+from config import API_ID, API_HASH, BOT_TOKEN, BIN_CHANNEL, STRING_SESSION
+from plugins.start import start_cmd
+from plugins.files import file_handler
+from web.server import web_server
+from utils.channel import resolve_bin_channel
 
-class Bot(Client):
-    def __init__(self):
-        super().__init__(
-            name="FileStreamBot",
-            api_id=Var.API_ID,
-            api_hash=Var.API_HASH,
-            bot_token=Var.BOT_TOKEN,
-            workers=Var.WORKERS,
-            plugins={"root": "plugins"},
-            sleep_threshold=60
-        )
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 
-    async def start(self):
-        # 1. Start the Pyrogram Client
-        await super().start()
-        me = await self.get_me()
-        self.username = me.username
-        
-        # 2. Start the Web Server (Required for Koyeb Health Checks)
+# ── Build the client ──────────────────────────────────────────────────────────
+# Use STRING_SESSION if provided (avoids re-auth on every restart),
+# otherwise fall back to BOT_TOKEN.
+app = Client(
+    "filetolink",
+    api_id=API_ID,
+    api_hash=API_HASH,
+    bot_token=BOT_TOKEN if not STRING_SESSION else None,
+    session_string=STRING_SESSION if STRING_SESSION else None
+)
+
+# ── Register handlers ─────────────────────────────────────────────────────────
+app.on_message(filters.command("start") & filters.private)(start_cmd)
+app.on_message(
+    filters.private & (
+        filters.document |
+        filters.video    |
+        filters.audio    |
+        filters.photo
+    )
+)(file_handler)
+
+# ── Entry point ───────────────────────────────────────────────────────────────
+async def main():
+    async with app:
+        me = await app.get_me()
+        logger.info(f"✅ Bot Started as @{me.username}")
+
+        # Verify BIN_CHANNEL — must pass before files can be saved
+        resolved = await resolve_bin_channel(app)
+        if not resolved:
+            logger.error(
+                "❌ BIN_CHANNEL could not be resolved.\n"
+                "   Files will NOT save correctly until this is fixed.\n"
+                "   See the checklist printed above."
+            )
+            # We do NOT exit — web server still starts so Koyeb health checks pass.
+
+        # Start the aiohttp web server (required for Koyeb health checks)
+        runner = await web_server()
+        logger.info(f"✅ Web server started successfully on port 8080")
+
         try:
-            await web_server()
-            print(f"🌍 Web server running on port {Var.PORT}")
-        except Exception as e:
-            print(f"❌ Web Server Error: {e}")
-
-        # 3. Verify BIN_CHANNEL (Prevents the 'Peer Invalid' lock)
-        try:
-            await self.get_chat(Var.BIN_CHANNEL)
-            print(f"📡 BIN_CHANNEL Verified: {Var.BIN_CHANNEL}")
-        except Exception as e:
-            print(f"⚠️ Warning: Cannot access BIN_CHANNEL. Error: {e}")
-            print("💡 Tip: Make sure the bot is an ADMIN in the channel.")
-
-        print(f"✅ Bot is Online as @{me.username}")
-
-    async def stop(self, *args):
-        await super().stop()
-        print("Bot is shutting down...")
+            await asyncio.Event().wait()   # Keep running forever
+        finally:
+            await runner.cleanup()
+            logger.info("🛑 Web server stopped cleanly")
 
 if __name__ == "__main__":
-    Bot().run()
+    asyncio.run(main())
     
