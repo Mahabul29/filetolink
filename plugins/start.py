@@ -4,7 +4,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Updated text: Removed "smooth streaming"
 START_TXT = """<b>👋 Hey {},</b>
 
 🤖 I'm <b>{}</b> 🚀 — just send me any <b>file or video</b> 📤 and I'll instantly convert it into a 🔗 <b>direct download link</b> ⚡.
@@ -16,6 +15,7 @@ START_TXT = """<b>👋 Hey {},</b>
 
 ➕ Add me as an <b>admin</b> to your channel 📢 and I'll create download links for every post automatically!"""
 
+# Fixed: Use one consistent name
 START_PIC = os.environ.get("START_PIC", "")
 
 async def start_cmd(client, message):
@@ -28,7 +28,8 @@ async def start_cmd(client, message):
     except Exception:
         bot_name = "FileBot"
 
-    if START_PHOTO:
+    # Fixed: Changed START_PHOTO to START_PIC
+    if START_PIC:
         try:
             await message.reply_photo(
                 photo=START_PIC,
@@ -39,6 +40,7 @@ async def start_cmd(client, message):
         except Exception as e:
             logger.error(f"Photo failed: {e}")
 
+    # Fallback if there is no photo or the photo fails
     await message.reply_text(
         START_TXT.format(user_name, bot_name),
         disable_web_page_preview=True,
