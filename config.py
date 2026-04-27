@@ -9,9 +9,8 @@ BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
 OWNER_ID = int(os.environ.get("OWNER_ID", "0"))
 
 # Channels
-BIN_CHANNEL = -1003862832472  # ✅ Hardcoded Hshs channel
+BIN_CHANNEL = int(os.environ.get("BIN_CHANNEL", "0"))
 LOG_CHANNEL = int(os.environ.get("LOG_CHANNEL", "0"))
-
 # Database
 DATABASE_URI = os.environ.get("DATABASE_URI", "")
 
