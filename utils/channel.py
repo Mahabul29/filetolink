@@ -1,28 +1,40 @@
 import logging
-from pyrogram import Client
-from config import BIN_CHANNEL
+import config
 
 logger = logging.getLogger(__name__)
 
-async def resolve_bin_channel(app: Client) -> bool:
-    """
-    Resolves and verifies the BIN_CHANNEL.
-    Bots CANNOT use invite links or GetDialogs — only direct ID lookup works.
-    The bot MUST already be a member/admin of the channel before this runs.
-    """
-
-    # Only valid method for bots: direct get_chat by numeric ID
+def load_bin_channel() -> int:
+    """Load BIN_CHANNEL from env var, or fall back to bin_channel.txt if saved."""
+    # Try the saved file first (set via /setbinchannel command)
     try:
-        chat = await app.get_chat(int(BIN_CHANNEL))
+        with open("bin_channel.txt", "r") as f:
+            saved = int(f.read().strip())
+            config.BIN_CHANNEL = saved
+            logger.info(f"📂 Loaded BIN_CHANNEL from file: {saved}")
+            return saved
+    except FileNotFoundError:
+        pass
+    except Exception as e:
+        logger.warning(f"Could not read bin_channel.txt: {e}")
+
+    return config.BIN_CHANNEL
+
+
+async def resolve_bin_channel(app) -> bool:
+    """Verify the bot can access BIN_CHANNEL."""
+    channel_id = load_bin_channel()
+
+    try:
+        chat = await app.get_chat(int(channel_id))
         logger.info(f"✅ BIN_CHANNEL resolved: {chat.title} (ID: {chat.id})")
         return True
     except Exception as e:
         logger.error(
-            f"❌ Cannot resolve BIN_CHANNEL ({BIN_CHANNEL}). Error: {e}\n"
-            f"👉 Fix checklist:\n"
-            f"   1. Make sure BIN_CHANNEL is a valid numeric ID (e.g. -1001234567890)\n"
-            f"   2. The bot must be an ADMIN in that channel\n"
-            f"   3. Forward a message from your channel to @userinfobot to get the correct ID"
+            f"❌ Cannot resolve BIN_CHANNEL ({channel_id}). Error: {e}\n"
+            f"👉 Fix options:\n"
+            f"   1. Send /setbinchannel <id> to the bot (forward a channel message first to get the ID)\n"
+            f"   2. Or update BIN_CHANNEL in Koyeb environment variables\n"
+            f"   3. The bot must be an ADMIN in the channel"
         )
         return False
         
