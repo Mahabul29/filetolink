@@ -37,4 +37,3 @@ async def resolve_bin_channel(app) -> bool:
             f"   3. The bot must be an ADMIN in the channel"
         )
         return False
-        
