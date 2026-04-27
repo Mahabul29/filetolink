@@ -1,9 +1,5 @@
 import os
 
-# =============================================
-#              BOT CONFIGURATION
-# =============================================
-
 # Telegram API Credentials
 API_ID = int(os.environ.get("API_ID", "0"))
 API_HASH = os.environ.get("API_HASH", "")
@@ -20,7 +16,7 @@ LOG_CHANNEL = int(os.environ.get("LOG_CHANNEL", "0"))
 DATABASE_URI = os.environ.get("DATABASE_URI", "")
 
 # Web Server
-FQDN = os.environ.get("FQDN", "").rstrip("/")
+FQDN = os.environ.get("FQDN", "").rstrip("/").replace("https://", "").replace("http://", "")
 PORT = int(os.environ.get("PORT", "8080"))
 HAS_SSL = os.environ.get("HAS_SSL", "True").lower() == "true"
 
@@ -30,9 +26,8 @@ FSUB = os.environ.get("FSUB", "False").lower() == "true"
 # Start Media
 START_PIC = os.environ.get("START_PIC", "")
 
-# =============================================
-#              GENERATED VALUES
-# =============================================
+# String Session
+STRING_SESSION = os.environ.get("STRING_SESSION", "")
 
 # Auto build base URL
 if HAS_SSL:
