@@ -1,8 +1,8 @@
 import os
-from pyrogram import filters
-import logging
+from pyrogram import Client, filters
 
-logger = logging.getLogger(__name__)
+# I have updated this to the direct 4K image link for Furina
+START_PIC = "https://images.uhdpaper.com/wallpapers/genshin-impact-furina-game-4k-wallpaper-pc-phone-3840x2160-161m.jpg" 
 
 START_TXT = """<b>👋 Hey {},</b>
 
@@ -11,15 +11,9 @@ START_TXT = """<b>👋 Hey {},</b>
 <b>Features:</b>
 ✅ High-speed direct links
 ✅ Works in Google Chrome
-✅ No ads or shorteners
-
-➕ Add me as an <b>admin</b> to your channel 📢 and I'll create download links for every post automatically!"""
-
-# Fixed: Use one consistent name
-START_PIC = os.environ.get("START_PIC", "")
+✅ No ads or shorteners"""
 
 async def start_cmd(client, message):
-    logger.info(f"[START] User {message.from_user.id} sent /start")
     user_name = message.from_user.first_name or "User"
     
     try:
@@ -28,7 +22,7 @@ async def start_cmd(client, message):
     except Exception:
         bot_name = "FileBot"
 
-    # Fixed: Changed START_PHOTO to START_PIC
+    # This sends the Furina image you liked
     if START_PIC:
         try:
             await message.reply_photo(
@@ -36,11 +30,11 @@ async def start_cmd(client, message):
                 caption=START_TXT.format(user_name, bot_name),
                 parse_mode="html"
             )
-            return
-        except Exception as e:
-            logger.error(f"Photo failed: {e}")
+            return 
+        except Exception:
+            pass 
 
-    # Fallback if there is no photo or the photo fails
+    # Fallback if the image link ever breaks
     await message.reply_text(
         START_TXT.format(user_name, bot_name),
         disable_web_page_preview=True,
