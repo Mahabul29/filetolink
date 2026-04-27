@@ -2,4 +2,3 @@ pyrogram
 tgcrypto
 aiohttp
 motor
-flask
