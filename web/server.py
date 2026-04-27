@@ -1,6 +1,5 @@
-
 from aiohttp import web
-import info   # Changed to direct import (no Var)
+import info # Moved to a new line
 
 routes = web.RouteTableDef()
 
@@ -20,13 +19,12 @@ async def download_handler(request):
 async def web_server():
     app = web.Application()
     app.add_routes(routes)
-
     runner = web.AppRunner(app)
     await runner.setup()
-
-    # Use variables directly from info.py
+    
+    # Using info.PORT directly as you intended
     site = web.TCPSite(runner, "0.0.0.0", info.PORT)
     await site.start()
-
     print(f"✅ Web server started successfully on port {info.PORT}")
     return runner
+    
