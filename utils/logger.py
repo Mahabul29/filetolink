@@ -1,12 +1,11 @@
-from info import Var
+from config import LOG_CHANNEL
 
 async def log_user(bot, user):
-    if Var.NEW_USER_LOG:
+    if LOG_CHANNEL:
         await bot.send_message(
-            Var.NEW_USER_LOG,
+            LOG_CHANNEL,
             f"👤 <b>New User Joined!</b>\n\n"
             f"🆔 <b>ID:</b> <code>{user.id}</code>\n"
             f"📛 <b>Name:</b> {user.mention}\n"
             f"🔗 <b>Username:</b> @{user.username if user.username else 'None'}"
         )
-      
