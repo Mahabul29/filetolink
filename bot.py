@@ -1,32 +1,27 @@
-from pyrogram import Client
-from info import Var
-from web.server import web_server
-from aiohttp import web
 import asyncio
+from aiohttp import web
+# ... your existing imports ...
 
-class Bot(Client):
-    def __init__(self):
-        super().__init__(
-            name=Var.name,
-            api_id=Var.API_ID,
-            api_hash=Var.API_HASH,
-            bot_token=Var.BOT_TOKEN,
-            workers=Var.WORKERS
-        )
+async def main():
+    # Start Telegram client
+    await client.start()
+    print("✅ Bot is now running...")   # This will show in Koyeb logs
+    
+    # Simple web server for Koyeb health check
+    app = web.Application()
+    app.router.add_get('/', lambda r: web.Response(text="Bot is running!"))
+    
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, '0.0.0.0', int(os.getenv("PORT", 8080)))
+    await site.start()
+    
+    print(f"🌐 Web server running on port {os.getenv('PORT', 8080)}")
+    
+    await asyncio.Event().wait()   # Keep running forever
 
-    async def start(self):
-        await super().start()
-        print("Bot Started!")
-        
-        # Start Web Server for Koyeb
-        app = await web_server()
-        runner = web.AppRunner(app)
-        await runner.setup()
-        site = web.TCPSite(runner, '0.0.0.0', Var.PORT)
-        await site.start()
-
-    async def stop(self, *args):
-        await super().stop()
-        print("Bot Stopped!")
-
-Bot().run()
+if __name__ == "__main__":
+    try:
+        asyncio.run(main())
+    except Exception as e:
+        print(f"❌ Error starting bot: {e}")
