@@ -1,11 +1,18 @@
 from pyrogram import filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from config import BASE_URL, BIN_CHANNEL
+import logging
+from config import BASE_URL, LOG_CHANNEL
+
+logger = logging.getLogger(__name__)
 
 async def file_handler(client, message):
     try:
-        # Forward the file to the merged Bin/Log channel
-        msg = await message.forward(BIN_CHANNEL)
+        # We use LOG_CHANNEL for everything now
+        if not LOG_CHANNEL:
+            return await message.reply_text("❌ Log Channel not configured.")
+
+        # Forward file to your Log Channel (this acts as storage)
+        msg = await message.forward(LOG_CHANNEL)
         file_id = msg.id
 
         download_link = f"{BASE_URL}/dl/{file_id}"
@@ -15,24 +22,28 @@ async def file_handler(client, message):
         file_size = getattr(media, "file_size", 0)
         size_mb = round(file_size / (1024 * 1024), 2) if file_size else "?"
 
-        reply_text = f"<b>📂 File:</b> <code>{file_name}</code>\n<b>📦 Size:</b> <code>{size_mb} MB</code>\n\n<b>🔗 Your Link Is Ready!</b>"
+        reply_text = f"""<b>📂 File:</b> <code>{file_name}</code>
+<b>📦 Size:</b> <code>{size_mb} MB</code>
 
-        buttons = InlineKeyboardMarkup([
-            [InlineKeyboardButton("⚡ Download", url=download_link)]
-        ])
+<b>🔗 Your Link Is Ready!</b>"""
 
-        # Reply to the user
+        buttons = InlineKeyboardMarkup([[
+            InlineKeyboardButton("⚡ Download", url=download_link)
+        ]])
+
         await message.reply_text(reply_text, reply_markup=buttons, parse_mode="html")
 
-        # Log the activity in the SAME channel
+        # Send the "Power Log" to the same channel
         await client.send_message(
-            BIN_CHANNEL,
-            f"📥 <b>File Processed</b>\n"
+            LOG_CHANNEL,
+            f"📥 <b>New File Stored & Logged</b>\n\n"
             f"👤 <b>User:</b> {message.from_user.mention}\n"
-            f"📂 <b>Name:</b> {file_name}\n"
+            f"📂 <b>File:</b> <code>{file_name}</code>\n"
+            f"📦 <b>Size:</b> {size_mb} MB\n"
             f"🔗 <b>Link:</b> {download_link}"
         )
 
     except Exception as e:
-        print(f"Error: {e}")
+        logger.error(f"Error: {e}")
+        await message.reply_text("❌ Error processing file. Make sure I am Admin in the Log Channel.")
         
