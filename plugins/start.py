@@ -1,25 +1,30 @@
-from pyrogram import Client, filters
 
-async def start_cmd(client, message):
+from pyrogram import Client, filters
+from pyrogram.types import Message
+
+# This function will handle the /start command
+async def start_cmd(client: Client, message: Message):
     try:
-        user_name = message.from_user.first_name or "User"
+        # Get the user's name safely
+        user_name = message.from_user.first_name if message.from_user else "User"
         
-        # Simple, solid text response
-        text = (
-            f"👋 <b>Hey {user_name},</b>\n\n"
-            f"🤖 I am online and ready! Just send me any <b>file or video</b> 📤 "
-            f"and I will instantly convert it into a 🔗 <b>direct download link</b> ⚡.\n\n"
-            f"✅ <b>High-speed links</b>\n"
-            f"✅ <b>No ads</b>"
+        # Define the message text
+        welcome_text = (
+            f"<b>👋 Hello {user_name}!</b>\n\n"
+            "🤖 I am your <b>File to Link Bot</b>.\n\n"
+            "📤 <b>How to use:</b>\n"
+            "Just send or forward any file/video to me, and I will "
+            "generate a high-speed download link for you instantly!"
         )
         
+        # Send the reply
         await message.reply_text(
-            text=text,
+            text=welcome_text,
             parse_mode="html",
             disable_web_page_preview=True
         )
         
     except Exception as e:
-        # This will show in your Koyeb logs if something goes wrong
-        print(f"Error in start_cmd: {e}")
+        # If there is an error, this prints it to your Koyeb logs
+        print(f"CRITICAL ERROR in start.py: {e}")
         
