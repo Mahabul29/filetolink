@@ -7,7 +7,6 @@ BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
 
 # Owner & Admin
 OWNER_ID = int(os.environ.get("OWNER_ID", "5733685945"))
-START_PIC =  int(os.environ.get("START_PIC", "https://www.uhdpaper.com/2023/07/genshin-impact-furina-game-4k-161m.html"))
 
 # Channels - Power Merge Logic
 LOG_CHANNEL = int(os.environ.get("LOG_CHANNEL", "-1002485776908"))
