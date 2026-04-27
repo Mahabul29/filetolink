@@ -1,7 +1,8 @@
 import os
 from pyrogram import Client, __version__
 from pyrogram.raw.all import layer
-from info import Var # Ensures it pulls from your Koyeb variables
+from info import Var
+from web.server import web_server # Ensure you have created web/server.py
 
 class Bot(Client):
     def __init__(self):
@@ -16,30 +17,32 @@ class Bot(Client):
         )
 
     async def start(self):
+        # 1. Start the Pyrogram Client
         await super().start()
         me = await self.get_me()
         self.username = me.username
         
-        print(f"✅ Bot Started as @{me.username}")
-        print(f"🌐 Pyrogram v{__version__} (Layer {layer})")
-
-        # --- SILENT CHANNEL VERIFICATION ---
+        # 2. Start the Web Server (Required for Koyeb Health Checks)
         try:
-            # We try to 'resolve' the peer so the bot recognizes the ID
-            await self.get_chat(Var.BIN_CHANNEL)
-            print(f"📡 BIN_CHANNEL Linked: {Var.BIN_CHANNEL}")
+            await web_server()
+            print(f"🌍 Web server running on port {Var.PORT}")
         except Exception as e:
-            print(f"⚠️ Peer Warning: {e}")
-            print("💡 Tip: Forward a message from the channel to the bot to fix this.")
+            print(f"❌ Web Server Error: {e}")
 
-        # Webserver Logic (Required for Koyeb Health Checks)
-        print(f"🌍 Web server running on port {Var.PORT}")
+        # 3. Verify BIN_CHANNEL (Prevents the 'Peer Invalid' lock)
+        try:
+            await self.get_chat(Var.BIN_CHANNEL)
+            print(f"📡 BIN_CHANNEL Verified: {Var.BIN_CHANNEL}")
+        except Exception as e:
+            print(f"⚠️ Warning: Cannot access BIN_CHANNEL. Error: {e}")
+            print("💡 Tip: Make sure the bot is an ADMIN in the channel.")
+
+        print(f"✅ Bot is Online as @{me.username}")
 
     async def stop(self, *args):
         await super().stop()
-        print("Bot stopped. Cleaning up...")
+        print("Bot is shutting down...")
 
 if __name__ == "__main__":
-    # This runs the bot instance
     Bot().run()
     
