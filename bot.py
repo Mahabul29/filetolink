@@ -1,7 +1,7 @@
 import logging
 import asyncio
 from pyrogram import Client, filters
-from config import API_ID, API_HASH, BOT_TOKEN, BIN_CHANNEL, PORT, STRING_SESSION
+from config import API_ID, API_HASH, BOT_TOKEN, BIN_CHANNEL, STRING_SESSION
 from plugins.start import start_cmd
 from plugins.files import file_handler
 from web.server import web_server
@@ -12,16 +12,16 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# ✅ Use string session if provided, otherwise use bot token
 app = Client(
     "filetolink",
     api_id=API_ID,
     api_hash=API_HASH,
-    bot_token=BOT_TOKEN,
+    bot_token=BOT_TOKEN if not STRING_SESSION else None,
     session_string=STRING_SESSION if STRING_SESSION else None
 )
 
 app.on_message(filters.command("start") & filters.private)(start_cmd)
-
 app.on_message(
     filters.private & (
         filters.document |
@@ -36,16 +36,24 @@ async def main():
         me = await app.get_me()
         logger.info(f"✅ Bot Started as @{me.username}")
 
+        # ✅ Hard fail if BIN_CHANNEL is invalid
         try:
             chat = await app.get_chat(BIN_CHANNEL)
             logger.info(f"✅ BIN_CHANNEL resolved: {chat.title}")
         except Exception as e:
-            logger.warning(f"⚠️ BIN_CHANNEL warning: {e}")
+            logger.error(f"❌ BIN_CHANNEL invalid — stopping bot: {e}")
+            raise SystemExit(1)
 
-        runner = await web_server(PORT)
-        logger.info(f"🌐 Web server running on port {PORT}")
+        # ✅ Correct call — no argument
+        runner = await web_server()
+        logger.info(f"🌐 Web server started")
 
-        await asyncio.Event().wait()
+        # ✅ Graceful shutdown on exit
+        try:
+            await asyncio.Event().wait()
+        finally:
+            await runner.cleanup()
+            logger.info("🛑 Web server stopped cleanly")
 
 if __name__ == "__main__":
     asyncio.run(main())
