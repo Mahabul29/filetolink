@@ -1,5 +1,5 @@
 from aiohttp import web
-from info import Var
+from config import PORT
 
 routes = web.RouteTableDef()
 
@@ -10,14 +10,16 @@ async def root_route_handler(request):
 @routes.get("/dl/{file_id}")
 async def download_handler(request):
     file_id = request.match_info.get('file_id')
-    # This header tells Chrome to 'download' the file instead of playing it
     return web.Response(
         text="Fetching file from Telegram...",
-        headers={"Content-Disposition": "attachment"} 
+        headers={"Content-Disposition": "attachment"}
     )
 
-async def web_server():
+async def web_server(port=PORT):
     app = web.Application()
     app.add_routes(routes)
-    return app
-    
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+    return runner
