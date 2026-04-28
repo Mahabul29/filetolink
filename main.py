@@ -1,4 +1,3 @@
-
 import asyncio
 import logging
 from pyrogram import idle
@@ -15,19 +14,18 @@ logger = logging.getLogger(__name__)
 async def main():
     async with bot:
         me = await bot.get_me()
-        logger.info(f"✅ Bot Started Successfully as @{me.username}")
+        logger.info(f"✅ Bot Started as @{me.username}")
 
-        # Start web server with main bot client
         runner = await web_server(bot_client=bot)
 
         logger.info("🌐 Web server started on port 8080")
 
         try:
-            await idle()   # Keep bot running
+            await idle()
         finally:
             if runner:
                 await runner.cleanup()
-            logger.info("🛑 Bot Stopped")
+            logger.info("🛑 Bot stopped")
 
 if __name__ == "__main__":
     asyncio.run(main())
