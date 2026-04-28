@@ -1,19 +1,13 @@
 import asyncio
-import logging
 from bot import bot
 from pyrogram import idle
 
-logging.basicConfig(level=logging.INFO)
-
 async def main():
     await bot.start()
-    # If you have a web server for Koyeb, start it here
-    # from web.server import web_server
-    # await web_server(bot) 
-    
-    await idle() # Keeps the bot running
-    await bot.stop()
+    print("Keep this terminal open to keep the bot alive.")
+    await idle() # This stops the script from closing immediately
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
     
