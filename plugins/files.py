@@ -7,8 +7,8 @@ def make_buttons(file_id):
     bot_link = f"https://t.me/{BOT_USERNAME}?start=file_{file_id}"
     stream_link = f"https://{clean_host}/dl/{file_id}"
     return bot_link, stream_link, InlineKeyboardMarkup([
-        [InlineKeyboardButton("🚀 Fast Download", url=stream_link)],
-        [InlineKeyboardButton("🤖 Get via Bot", url=bot_link)]
+        [InlineKeyboardButton("ᴅᴏᴡɴʟᴏᴅ", url=stream_link)],
+        [InlineKeyboardButton("ɢᴇᴛt ᴠɪᴀ ʙᴏᴛ", url=bot_link)]
     ])
 
 @Client.on_message(filters.private & (filters.document | filters.video | filters.audio))
