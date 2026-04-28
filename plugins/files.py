@@ -14,7 +14,7 @@ async def file_handler(client, message):
 
         clean_host = FQDN.strip("/").replace("https://", "").replace("http://", "")
         stream_link = f"https://{clean_host}/dl/{file_id}"
-        bot_link    = f"https://t.me/{File_To_Link2_Bot}?start=file_{file_id}"
+        bot_link = f"https://t.me/{BOT_USERNAME}?start=file_{file_id}"
 
         reply_markup = InlineKeyboardMarkup([
             [InlineKeyboardButton("🚀 Fast Download", url=stream_link)],
