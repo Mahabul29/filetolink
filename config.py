@@ -8,20 +8,25 @@ BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
 # Owner & Admin
 OWNER_ID = int(os.environ.get("OWNER_ID", "5733685945"))
 
-# Channels - Power Merge Logic
+# Channels
 LOG_CHANNEL = int(os.environ.get("LOG_CHANNEL", "-1002485776908"))
-BIN_CHANNEL = int(os.environ.get("BIN_CHANNEL", LOG_CHANNEL)) 
+BIN_CHANNEL = int(os.environ.get("BIN_CHANNEL", LOG_CHANNEL))
 
-# Database
+# Database (optional for now)
 DATABASE_URI = os.environ.get("DATABASE_URI", "")
 
-# Web Server - Cleaned for single-slash links
-FQDN = os.environ.get("FQDN", "").strip().strip("/")
+# Web Server Settings
+FQDN = os.environ.get("FQDN", "").strip().rstrip("/")
+
+# Important: Force FQDN if not set from environment
+if not FQDN:
+    FQDN = "your-app-name.koyeb.app"   # ← CHANGE THIS to your real Koyeb URL
+
 PORT = int(os.environ.get("PORT", "8080"))
 HAS_SSL = os.environ.get("HAS_SSL", "True").lower() == "true"
 
-# Auto build base URL
-BASE_URL = f"https://{FQDN}" if HAS_SSL else f"http://{FQDN}"
+# Bot Username (without @ symbol)
+BOT_USERNAME = os.environ.get("BOT_USERNAME", "File_To_Link2_Bot")
 
-# Bot Username (without @)
-BOT_USERNAME = os.environ.get("BOT_USERNAME", "File_To_Link2_Bot")  # ← ADD THIS
+# Logging
+LOG_LEVEL = "INFO"
