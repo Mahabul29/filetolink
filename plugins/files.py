@@ -1,6 +1,6 @@
 import logging
 from pyrogram import Client, filters, enums
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton   # ← Fixed
 from config import LOG_CHANNEL, FQDN, BOT_USERNAME
 
 logger = logging.getLogger(__name__)
@@ -13,11 +13,10 @@ logger = logging.getLogger(__name__)
 )
 async def file_handler(client: Client, message: Message):
     try:
-        # Copy file to BIN_CHANNEL / LOG_CHANNEL
         copied_msg = await message.copy(chat_id=int(LOG_CHANNEL))
         file_id = copied_msg.id
 
-        clean_host = FQDN.strip("/").replace("https://", "").replace("http://", "")
+        clean_host = FQDN.strip().rstrip("/").replace("https://", "").replace("http://", "")
         stream_link = f"https://{clean_host}/dl/{file_id}"
         bot_link = f"https://t.me/{BOT_USERNAME}?start=file_{file_id}"
 
@@ -46,7 +45,7 @@ async def channel_file_handler(client: Client, message: Message):
     try:
         file_id = message.id
 
-        clean_host = FQDN.strip("/").replace("https://", "").replace("http://", "")
+        clean_host = FQDN.strip().rstrip("/").replace("https://", "").replace("http://", "")
         stream_link = f"https://{clean_host}/dl/{file_id}"
         bot_link = f"https://t.me/{BOT_USERNAME}?start=file_{file_id}"
 
