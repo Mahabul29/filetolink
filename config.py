@@ -22,3 +22,6 @@ HAS_SSL = os.environ.get("HAS_SSL", "True").lower() == "true"
 
 # Auto build base URL
 BASE_URL = f"https://{FQDN}" if HAS_SSL else f"http://{FQDN}"
+
+# Bot Username (without @)
+BOT_USERNAME = os.environ.get("BOT_USERNAME", "File_To_Link2_Bot")  # ← ADD THIS
