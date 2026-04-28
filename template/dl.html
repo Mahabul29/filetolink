@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fast Download</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; background: #121212; color: white; padding-top: 50px; }
+        .dl-box { border: 1px solid #333; display: inline-block; padding: 20px; border-radius: 10px; }
+    </style>
+</head>
+<body>
+    <div class="dl-box">
+        <h3>File Name: {{ file_name }}</h3>
+        <p>Size: {{ file_size }}</p>
+        <a href="{{ direct_link }}" class="btn" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">📥 START DOWNLOAD NOW</a>
+    </div>
+</body>
+</html>
