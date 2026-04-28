@@ -1,6 +1,6 @@
 import os
-import asyncio
 import threading
+import requests
 from flask import Flask, render_template, redirect
 from pyrogram import Client, idle
 from config import API_ID, API_HASH, BOT_TOKEN, PORT, BIN_CHANNEL
@@ -23,34 +23,65 @@ def index():
 def download_page(file_id):
     return render_template(
         'dl.html',
-        file_name="JavaGoat File",
-        file_size="Fast Download",
+        file_name="Your File",
+        file_size="",
         file_id=file_id
     )
 
 @app_web.route('/download/<file_id>')
 def start_download(file_id):
     try:
-        loop = bot.loop
-        msg = asyncio.run_coroutine_threadsafe(
-            bot.get_messages(BIN_CHANNEL, int(file_id)),
-            loop
-        ).result(timeout=30)
+        tg_api = f"https://api.telegram.org/bot{BOT_TOKEN}"
 
-        if not msg or not msg.document:
-            return "File not found.", 404
+        # Get the message from BIN_CHANNEL
+        msg_resp = requests.get(
+            f"{tg_api}/getMessages",
+            params={
+                "chat_id": BIN_CHANNEL,
+                "message_id": int(file_id)
+            }
+        ).json()
 
-        # Get direct Telegram CDN link
-        url = asyncio.run_coroutine_threadsafe(
-            bot.get_file_url(msg.document.file_id),
-            loop
-        ).result(timeout=30)
+        # Use forwardMessage to access the file
+        fwd = requests.post(
+            f"{tg_api}/forwardMessage",
+            json={
+                "chat_id": BIN_CHANNEL,
+                "from_chat_id": BIN_CHANNEL,
+                "message_id": int(file_id)
+            }
+        ).json()
 
-        return redirect(url)
+        if not fwd.get("ok"):
+            return f"File not found: {fwd}", 404
+
+        msg = fwd["result"]
+        doc = (msg.get("document") or msg.get("video") or
+               msg.get("audio") or msg.get("video_note"))
+
+        if not doc:
+            return "No file in this message.", 404
+
+        tg_file_id = doc["file_id"]
+
+        # Get download path
+        file_info = requests.get(
+            f"{tg_api}/getFile",
+            params={"file_id": tg_file_id}
+        ).json()
+
+        if not file_info.get("ok"):
+            return "File too large for direct download (>20MB). Use Telegram app.", 400
+
+        file_path = file_info["result"]["file_path"]
+        download_url = f"https://api.telegram.org/file/bot{BOT_TOKEN}/{file_path}"
+
+        return redirect(download_url)
 
     except Exception as e:
         print(f"Download error: {e}")
         return f"Error: {str(e)}", 500
+
 
 def run_web():
     try:
