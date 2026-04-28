@@ -1,9 +1,11 @@
-from pyrogram import filters, enums
+import logging
+from pyrogram import Client, filters, enums
 from pyrogram.types import Message
 from config import BIN_CHANNEL
 
-# ====================== START COMMAND (Direct in main.py) ======================
-@bot.on_message(filters.command("start") & filters.private)
+logger = logging.getLogger(__name__)
+
+@Client.on_message(filters.command("start") & filters.private)
 async def start_cmd(client: Client, message: Message):
     try:
         if len(message.command) > 1:
@@ -16,19 +18,19 @@ async def start_cmd(client: Client, message: Message):
                         from_chat_id=int(BIN_CHANNEL),
                         message_id=file_id
                     )
-                except Exception as e:
+                except Exception:
                     await message.reply_text("<b>❌ File not found or deleted.</b>", parse_mode=enums.ParseMode.HTML)
                 return
 
-        # Normal /start
         user_name = message.from_user.first_name if message.from_user else "User"
         await message.reply_text(
             f"<b>👋 Hello {user_name}!</b>\n\n"
             "🤖 I am your <b>File to Link Bot</b>.\n\n"
-            "📤 Send or forward any file to me and I will generate a high-speed download link instantly!\n\n"
+            "📤 Send any file to get download link.\n\n"
             "<i>Powered by JavaGoat Streaming</i>",
             parse_mode=enums.ParseMode.HTML,
             disable_web_page_preview=True
         )
     except Exception as e:
+        logger.error(f"Start error: {e}")
         await message.reply_text("❌ Something went wrong!")
