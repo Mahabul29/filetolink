@@ -21,17 +21,33 @@ def index():
 
 @app_web.route('/dl/<file_id>')
 def download_page(file_id):
+    try:
+        bot_loop = bot.loop
+        msg = asyncio.run_coroutine_threadsafe(
+            bot.get_messages(BIN_CHANNEL, int(file_id)),
+            bot_loop
+        ).result(timeout=30)
+
+        if msg and msg.document:
+            file_name = msg.document.file_name or "Unknown"
+            file_size = f"{round(msg.document.file_size / (1024 * 1024), 2)} MB"
+        else:
+            file_name = "Unknown"
+            file_size = "Unknown"
+    except Exception as e:
+        file_name = "Unknown"
+        file_size = "Unknown"
+
     return render_template(
         'dl.html',
-        file_name="Your File",
-        file_size="",
+        file_name=file_name,
+        file_size=file_size,
         file_id=file_id
     )
 
 @app_web.route('/download/<file_id>')
 def start_download(file_id):
     try:
-        # Get Pyrogram's own loop
         bot_loop = bot.loop
 
         msg = asyncio.run_coroutine_threadsafe(
@@ -76,19 +92,4 @@ def start_download(file_id):
         return f"Error: {str(e)}", 500
 
 
-def run_web():
-    app_web.run(host="0.0.0.0", port=int(PORT), threaded=True)
-
-
-if __name__ == "__main__":
-    bot.start()
-    print("✅ Bot started!")
-
-    web_thread = threading.Thread(target=run_web)
-    web_thread.daemon = True
-    web_thread.start()
-    print(f"✅ Web server active on port {PORT}")
-
-    print("🚀 Listening...")
-    idle()
-    bot.stop()
+def run
