@@ -5,7 +5,7 @@ from config import LOG_CHANNEL, FQDN, BOT_USERNAME
 @Client.on_message(filters.private & (filters.document | filters.video | filters.audio))
 async def private_handler(client: Client, message: Message):
     try:
-        # Copy file to storage channel
+        # Copy to storage
         copied_msg = await client.copy_message(
             chat_id=LOG_CHANNEL,
             from_chat_id=message.chat.id,
@@ -18,14 +18,13 @@ async def private_handler(client: Client, message: Message):
         bot_link = f"https://t.me/{BOT_USERNAME}?start=file_{file_id}"
         stream_link = f"https://{clean_host}/dl/{file_id}"
 
-        # Buttons
         markup = InlineKeyboardMarkup([
             [InlineKeyboardButton("🚀 Fast Download", url=stream_link)],
             [InlineKeyboardButton("🤖 Get via Bot", url=bot_link)]
         ])
 
         await message.reply_text(
-            f"<b>✅ Your Download Link is Ready!</b>\n\n🔗 <code>{bot_link}</code>",
+            f"<b>✅ File Stored Successfully!</b>\n\n🔗 <code>{bot_link}</code>",
             reply_markup=markup,
             parse_mode=enums.ParseMode.HTML
         )
