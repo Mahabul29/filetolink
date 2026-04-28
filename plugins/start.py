@@ -4,7 +4,7 @@ from pyrogram import Client, filters, enums
 from pyrogram.types import Message
 from config import LOG_CHANNEL
 
-logger = logging.getLogger(name)
+logger = logging.getLogger(__name__)
 
 @Client.on_message(filters.command("start") & filters.private)
 async def start_cmd(client: Client, message: Message):
