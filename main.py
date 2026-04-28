@@ -1,9 +1,8 @@
 import asyncio
 import logging
-from pyrogram import idle
-
-from bot import bot
-from web.server import web_server
+from pyrogram import Client, idle
+# Ensure 'bot' is the name of your Client instance in bot.py
+from bot import bot 
 
 logging.basicConfig(
     level=logging.INFO,
@@ -12,20 +11,21 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 async def main():
-    async with bot:
+    try:
+        # Start the client
+        await bot.start()
         me = await bot.get_me()
         logger.info(f"✅ Bot Started as @{me.username}")
-
-        runner = await web_server(bot_client=bot)
-
-        logger.info("🌐 Web server started on port 8080")
-
-        try:
-            await idle()
-        finally:
-            if runner:
-                await runner.cleanup()
-            logger.info("🛑 Bot stopped")
+        
+        # We keep it simple to test connection first
+        await idle()
+        
+    except Exception as e:
+        logger.error(f"❌ Error during startup: {e}")
+    finally:
+        await bot.stop()
+        logger.info("🛑 Bot stopped")
 
 if __name__ == "__main__":
     asyncio.run(main())
+    
