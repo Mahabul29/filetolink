@@ -5,11 +5,11 @@ from config import LOG_CHANNEL, FQDN
 
 logger = logging.getLogger(__name__)
 
-# Filter to handle files in private chats and channels, excluding commands
+# FIX: Added parentheses to filters.command() to prevent the TypeError
 @Client.on_message(
     (filters.private | filters.channel) & 
     (filters.document | filters.video | filters.audio) & 
-    ~filters.command
+    ~filters.command() 
 )
 async def file_handler(client, message):
     try:
@@ -17,17 +17,17 @@ async def file_handler(client, message):
         target_chat = int(LOG_CHANNEL)
         msg = await message.copy(chat_id=target_chat)
         
-        # 2. Extract file details for the information block
+        # 2. Extract file details for the information card
         file_obj = message.document or message.video or message.audio
         file_name = file_obj.file_name
         file_size = f"{round(file_obj.file_size / (1024 * 1024), 2)} MB"
         
-        # 3. Generate your professional website link
+        # 3. Generate the website download link
         file_id = msg.id
         clean_host = FQDN.strip("/")
         download_link = f"https://{clean_host}/dl/{file_id}"
 
-        # 4. Create the Inline Buttons for the download link
+        # 4. Create professional Inline Buttons
         reply_markup = InlineKeyboardMarkup([
             [
                 InlineKeyboardButton("Server 1 🔺", url=download_link),
@@ -35,7 +35,7 @@ async def file_handler(client, message):
             ]
         ])
 
-        # 5. Send the File Information and Download Link
+        # 5. Send the File Information Card
         info_text = (
             f"📑 <b>FILE DETAILS FOUND</b>\n\n"
             f"📝 <b>Name:</b> <code>{file_name}</code>\n"
@@ -49,11 +49,10 @@ async def file_handler(client, message):
             reply_markup=reply_markup
         )
 
-        # 6. Immediately send the actual file back to the user
-        # This gives them the file and the link at the same time
+        # 6. Send the actual file back to the user instantly
         await message.reply_document(
             document=file_obj.file_id,
-            caption=f"✅ <b>Here is your file:</b> <code>{file_name}</code>",
+            caption=f"✅ <b>File Received:</b> <code>{file_name}</code>",
             parse_mode=enums.ParseMode.HTML
         )
         
