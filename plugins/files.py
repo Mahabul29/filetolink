@@ -5,11 +5,11 @@ from config import LOG_CHANNEL, FQDN
 
 logger = logging.getLogger(__name__)
 
-# FIX: Added parentheses to filters.command() to prevent the TypeError
+# FIX: Use ~filters.regex(r"^/") to ignore all command-style text
 @Client.on_message(
     (filters.private | filters.channel) & 
     (filters.document | filters.video | filters.audio) & 
-    ~filters.command() 
+    ~filters.regex(r"^/") 
 )
 async def file_handler(client, message):
     try:
