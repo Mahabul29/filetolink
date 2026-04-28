@@ -1,4 +1,4 @@
-from bot import Bot  # Capital 'B' to match the class name
+from bot import Bot
 
 if __name__ == "__main__":
     Bot().run()
