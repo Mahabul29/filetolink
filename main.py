@@ -1,8 +1,10 @@
+
 import asyncio
 import logging
 from pyrogram import idle
-from bot import bot                    # Main Pyrogram bot
-from web.server import web_server      # aiohttp web server
+
+from bot import bot
+from web.server import web_server
 
 logging.basicConfig(
     level=logging.INFO,
@@ -15,17 +17,17 @@ async def main():
         me = await bot.get_me()
         logger.info(f"✅ Bot Started Successfully as @{me.username}")
 
-        # Start web server and pass the main bot client for streaming
+        # Start web server with main bot client
         runner = await web_server(bot_client=bot)
 
         logger.info("🌐 Web server started on port 8080")
 
         try:
-            await idle()                    # Keep everything running
+            await idle()   # Keep bot running
         finally:
             if runner:
                 await runner.cleanup()
-            logger.info("🛑 Shutdown completed")
+            logger.info("🛑 Bot Stopped")
 
 if __name__ == "__main__":
     asyncio.run(main())
