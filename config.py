@@ -20,7 +20,7 @@ FQDN = os.environ.get("FQDN", "").strip().rstrip("/")
 
 # Important: Force FQDN if not set from environment
 if not FQDN:
-    FQDN = "bizarre-eryn-mahavayst-3c43818f.koyeb.app/"   # ← CHANGE THIS to your real Koyeb URL
+    FQDN = "bizarre-eryn-mahavayst-3c43818f.koyeb.app/"   # ← has trailing slash
 
 PORT = int(os.environ.get("PORT", "8080"))
 HAS_SSL = os.environ.get("HAS_SSL", "True").lower() == "true"
