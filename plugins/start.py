@@ -44,7 +44,7 @@ async def start_cmd(client: Client, message: Message):
         # Added a photo for the start command (as you mentioned wanting a photo)
         # Replace 'https://...' with your actual image URL
         await message.reply_photo(
-            photo="https://graph.org/file/your-image-id.jpg", 
+            photo="https://www.uhdpaper.com/2023/07/genshin-impact-furina-game-4k-161m.html", 
             caption=welcome_text,
             parse_mode=enums.ParseMode.HTML
         )
