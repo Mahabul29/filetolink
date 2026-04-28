@@ -1,17 +1,16 @@
-import logging
-from pyrogram import Client, filters
-from config import API_ID, API_HASH, BOT_TOKEN
-# 1. MAKE SURE THIS IMPORT IS CORRECT
-from plugins.start import start_cmd 
+from flask import Flask, render_template
 
-app = Client("MyBot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
+# Initialize Flask with the template folder
+app = Flask(__name__, template_folder='template')
 
-# 2. REGISTER THE HANDLER HERE
-@app.on_message(filters.command("start") & filters.private)
-async def start_handler(client, message):
-    await start_cmd(client, message)
+@app.route('/')
+def index():
+    # THIS FIXES KOYEB STARTING LOOP
+    # When Koyeb pokes port 8080, it sees this and says "Healthy!"
+    return "Bot Web Server is Running Successfully!", 200
 
-if __name__ == "__main__":
-    print("Bot is starting...")
-    app.run()
+@app.route('/dl/<file_id>')
+def download_page(file_id):
+    # This is where you would use your dl.html
+    return render_template('dl.html', file_name="Your File", direct_link="#")
     
