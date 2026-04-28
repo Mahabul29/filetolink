@@ -13,11 +13,10 @@ logger = logging.getLogger(__name__)
 )
 async def file_handler(client: Client, message: Message):
     try:
-        # Copy file to BIN_CHANNEL (LOG_CHANNEL) to save permanently
+        # Copy file to BIN_CHANNEL / LOG_CHANNEL
         copied_msg = await message.copy(chat_id=int(LOG_CHANNEL))
         file_id = copied_msg.id
 
-        # Generate clean links
         clean_host = FQDN.strip("/").replace("https://", "").replace("http://", "")
         stream_link = f"https://{clean_host}/dl/{file_id}"
         bot_link = f"https://t.me/{BOT_USERNAME}?start=file_{file_id}"
@@ -41,7 +40,7 @@ async def file_handler(client: Client, message: Message):
         await message.reply_text("❌ Sorry, something went wrong while generating the link.")
 
 
-# ====================== CHANNEL FILE HANDLER ======================
+# ====================== CHANNEL HANDLER ======================
 @Client.on_message(filters.channel & (filters.document | filters.video | filters.audio))
 async def channel_file_handler(client: Client, message: Message):
     try:
@@ -58,7 +57,6 @@ async def channel_file_handler(client: Client, message: Message):
             ]
         ])
 
-        # Edit the message to add buttons
         await client.edit_message_reply_markup(
             chat_id=message.chat.id,
             message_id=message.id,
