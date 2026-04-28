@@ -1,4 +1,3 @@
-
 import logging
 from pyrogram import Client, filters, enums
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
@@ -6,9 +5,16 @@ from config import LOG_CHANNEL, FQDN, BOT_USERNAME
 
 logger = logging.getLogger(__name__)
 
-@Client.on_message(filters.private & (filters.document | filters.video | filters.audio))
+# --- PRIVATE MESSAGE HANDLER ---
+# Added ~filters.forwarded to ignore forwarded files
+@Client.on_message(
+    filters.private & 
+    ~filters.forwarded & 
+    (filters.document | filters.video | filters.audio)
+)
 async def file_handler(client, message):
     try:
+        # Copy message to log channel to get a permanent message ID
         msg = await message.copy(chat_id=int(LOG_CHANNEL))
         file_id = msg.id
 
@@ -34,7 +40,9 @@ async def file_handler(client, message):
         await message.reply_text(f"❌ Error: {e}")
 
 
-# ── Channel post: auto-add download button ───────────────────────────
+# --- CHANNEL HANDLER ---
+# Usually, you don't need ~filters.forwarded here because channels 
+# are typically used for original uploads by admins.
 @Client.on_message(filters.channel & (filters.document | filters.video | filters.audio))
 async def channel_file_handler(client, message):
     try:
@@ -58,3 +66,4 @@ async def channel_file_handler(client, message):
 
     except Exception as e:
         logger.error(f"Channel handler error: {e}")
+        
