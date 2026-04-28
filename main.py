@@ -74,4 +74,27 @@ def start_download(file_id):
         return Response(
             stream_with_context(generate()),
             headers={
-                "Content-Disposition": f'attachment; filename="{file_
+                "Content-Disposition": f"attachment; filename=\"{file_name}\"",
+                "Content-Type": mime_type,
+                "Content-Length": str(file_size),
+            }
+        )
+    except Exception as e:
+        print(f"Download error: {e}")
+        return f"Error: {str(e)}", 500
+
+
+def run_web():
+    app_web.run(host="0.0.0.0", port=int(PORT), threaded=True)
+
+
+if __name__ == "__main__":
+    bot.start()
+    print("Bot started!")
+    web_thread = threading.Thread(target=run_web)
+    web_thread.daemon = True
+    web_thread.start()
+    print(f"Web server active on port {PORT}")
+    print("Listening...")
+    idle()
+    bot.stop()
