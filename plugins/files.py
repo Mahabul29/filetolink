@@ -5,18 +5,19 @@ from config import LOG_CHANNEL, FQDN, BOT_USERNAME
 
 logger = logging.getLogger(__name__)
 
+
 # ====================== PRIVATE CHAT FILE HANDLER ======================
 @Client.on_message(
-    filters.private & 
-    ~filters.forwarded & 
+    filters.private &
     (filters.document | filters.video | filters.audio)
 )
 async def file_handler(client: Client, message: Message):
     try:
+        # Copy file to LOG_CHANNEL/BIN_CHANNEL to store it
         copied_msg = await message.copy(chat_id=int(LOG_CHANNEL))
         file_id = copied_msg.id
 
-        clean_host = FQDN.strip().rstrip("/").replace("https://", "").replace("http://", "")
+        clean_host = FQDN.strip().rstrip("/")
         stream_link = f"https://{clean_host}/dl/{file_id}"
         bot_link = f"https://t.me/{BOT_USERNAME}?start=file_{file_id}"
 
@@ -26,9 +27,9 @@ async def file_handler(client: Client, message: Message):
         ])
 
         await message.reply_text(
-            f"<b>✅ Your Download Link Ready!</b>\n\n"
+            f"<b>✅ Your Download Link is Ready!</b>\n\n"
             f"🔗 <code>{stream_link}</code>\n\n"
-            f"<i>Powered by JavaGoat Streaming</i>",
+            f"⚡ <i>Powered by JavaGoat Streaming</i>",
             parse_mode=enums.ParseMode.HTML,
             reply_markup=reply_markup,
             disable_web_page_preview=True
@@ -39,13 +40,15 @@ async def file_handler(client: Client, message: Message):
         await message.reply_text("❌ Sorry, something went wrong while generating the link.")
 
 
-# ====================== CHANNEL HANDLER ======================
-@Client.on_message(filters.channel & (filters.document | filters.video | filters.audio))
+# ====================== CHANNEL POST HANDLER ======================
+@Client.on_message(
+    filters.channel &
+    (filters.document | filters.video | filters.audio)
+)
 async def channel_file_handler(client: Client, message: Message):
     try:
         file_id = message.id
-
-        clean_host = FQDN.strip().rstrip("/").replace("https://", "").replace("http://", "")
+        clean_host = FQDN.strip().rstrip("/")
         stream_link = f"https://{clean_host}/dl/{file_id}"
         bot_link = f"https://t.me/{BOT_USERNAME}?start=file_{file_id}"
 
