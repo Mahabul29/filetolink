@@ -2,7 +2,7 @@ import logging
 from pyrogram import Client, filters, enums
 from config import LOG_CHANNEL, FQDN
 
-logger = logging.getLogger(name)
+logger = logging.getLogger(__name__)
 
 @Client.on_message(filters.private & (filters.document | filters.video | filters.audio))
 async def file_handler(client, message):
