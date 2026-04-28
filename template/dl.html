@@ -4,14 +4,26 @@
     <title>Fast Download</title>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; background: #121212; color: white; padding-top: 50px; }
-        .dl-box { border: 1px solid #333; display: inline-block; padding: 20px; border-radius: 10px; }
+        .dl-box { border: 1px solid #333; display: inline-block; padding: 30px; border-radius: 15px; background: #1e1e1e; }
+        .btn { 
+            background: #28a745; 
+            color: white; 
+            padding: 12px 25px; 
+            text-decoration: none; 
+            border-radius: 5px; 
+            font-weight: bold;
+            display: inline-block;
+            margin-top: 15px;
+        }
+        .btn:hover { background: #218838; }
     </style>
 </head>
 <body>
     <div class="dl-box">
         <h3>File Name: {{ file_name }}</h3>
         <p>Size: {{ file_size }}</p>
-        <a href="{{ direct_link }}" class="btn" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">📥 START DOWNLOAD NOW</a>
+        
+        <a href="https://t.me/YourBotUsername?start=file_{{ file_id }}" class="btn">📥 START DOWNLOAD NOW</a>
     </div>
 </body>
 </html>
