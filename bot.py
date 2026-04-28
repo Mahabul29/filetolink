@@ -1,7 +1,8 @@
-from pyrogram import Client
-from config import API_ID, API_HASH, BOT_TOKEN, LOG_CHANNEL, PORT
-from aiohttp import web
+import os
 import asyncio
+from pyrogram import Client
+from aiohttp import web
+from config import API_ID, API_HASH, BOT_TOKEN, LOG_CHANNEL, PORT, FQDN
 
 class Bot(Client):
     def __init__(self):
@@ -15,25 +16,59 @@ class Bot(Client):
 
     async def start(self):
         await super().start()
-        
-        # This part forces the bot to 'cache' the channel ID
+
+        # Force peer cache using get_chat + send a test message
         try:
-            # We convert the config value to an integer for the API call
-            storage_chat = await self.get_chat(int(LOG_CHANNEL))
-            print(f"✅ SUCCESS: Connected to {storage_chat.title} ({LOG_CHANNEL})")
+            chat = await self.get_chat(LOG_CHANNEL)
+            print(f"✅ Connected to: {chat.title} ({LOG_CHANNEL})")
         except Exception as e:
             print(f"❌ Peer ID Error: {e}")
-            print("💡 TIP: Make the channel PUBLIC temporarily and send the @username to the bot.")
+            print("Action Needed: Send the channel username to the bot once!")
 
-        # Web Server for Koyeb Health Checks
+        # Web server
+        bot_ref = self
+
+        async def health(request):
+            return web.Response(text="Bot is Running")
+
+        async def stream_file(request):
+            try:
+                file_id = int(request.match_info["file_id"])
+                msg = await bot_ref.get_messages(LOG_CHANNEL, file_id)
+                if not msg or not msg.media:
+                    return web.Response(status=404, text="File not found")
+
+                media = msg.document or msg.video or msg.audio
+                file_name = getattr(media, "file_name", "file") or "file"
+                mime = getattr(media, "mime_type", "application/octet-stream")
+
+                # Stream the file
+                headers = {
+                    "Content-Disposition": f'attachment; filename="{file_name}"',
+                    "Content-Type": mime,
+                }
+                response = web.StreamResponse(headers=headers)
+                await response.prepare(request)
+
+                async for chunk in bot_ref.stream_media(msg):
+                    await response.write(chunk)
+
+                await response.write_eof()
+                return response
+
+            except Exception as e:
+                return web.Response(status=500, text=str(e))
+
         app = web.Application()
-        app.router.add_get("/", lambda r: web.Response(text="Bot is Running"))
+        app.router.add_get("/", health)
+        app.router.add_get("/dl/{file_id}", stream_file)
+
         runner = web.AppRunner(app)
         await runner.setup()
         site = web.TCPSite(runner, "0.0.0.0", PORT)
         asyncio.create_task(site.start())
         print(f"🚀 Health Check live on port {PORT}")
+        print(f"🌐 Stream server live at https://{FQDN}/dl/")
 
     async def stop(self, *args):
         await super().stop()
-        
