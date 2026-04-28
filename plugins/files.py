@@ -1,46 +1,44 @@
 import logging
 from pyrogram import Client, filters, enums
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from config import FQDN, LOG_CHANNEL
+from config import LOG_CHANNEL, FQDN
 
 # Use __name__ to avoid the NameError
 logger = logging.getLogger(__name__)
 
-# Change the filter to listen to Channels
-@Client.on_message(filters.channel & (filters.document | filters.video | filters.audio))
-async def channel_file_handler(client, message):
+# 1. START COMMAND HANDLER
+@Client.on_message(filters.private & filters.command("start"))
+async def start_handler(client, message):
+    await message.reply_text(
+        f"<b>Hello {message.from_user.mention}!</b>\n\n"
+        f"I am a File to Link Generator bot. Send me any file and I will give you a high-speed download link.",
+        parse_mode=enums.ParseMode.HTML
+    )
+
+# 2. FILE HANDLER (Generates the Link)
+@Client.on_message(filters.private & (filters.document | filters.video | filters.audio))
+async def file_handler(client, message):
     try:
-        # We process the file by copying it to the Log Channel first.
-        # This keeps our download DB organized.
-        log_msg = await message.copy(chat_id=int(LOG_CHANNEL))
+        # Copy the file to the log channel
+        msg = await message.copy(chat_id=int(LOG_CHANNEL))
         
-        file_id = log_msg.id
+        file_id = msg.id
         clean_host = FQDN.strip("/").replace("https://", "").replace("http://", "")
-        # Standard download link
         download_link = f"https://{clean_host}/dl/{file_id}"
-        # Alternative link (server 2) can go here if needed
-        # alternate_link = f"https://server2.{clean_host}/dl/{file_id}" 
 
-        # Create the buttons (as seen in your screenshot)
+        # Create a button for the link
         reply_markup = InlineKeyboardMarkup(
-            [
-                [
-                    InlineKeyboardButton("Server 1 🔺", url=download_link),
-                    InlineKeyboardButton("Server 2 🔺", url=download_link) # Pointing to the same link for now
-                ]
-            ]
+            [[InlineKeyboardButton("🚀 Fast Download", url=download_link)]]
         )
 
-        # Edit the original post in the source channel to add the buttons
-        # We maintain the original caption if it exists.
-        await message.edit_caption(
-            caption=message.caption or "",
-            reply_markup=reply_markup,
-            parse_mode=enums.ParseMode.HTML
+        await message.reply_text(
+            f"<b>✅ Your Download Link is Ready:</b>\n\n"
+            f"🔗 <code>{download_link}</code>\n\n"
+            f"<i>Powered by JavaGoat Streaming</i>",
+            parse_mode=enums.ParseMode.HTML,
+            reply_markup=reply_markup
         )
-        
     except Exception as e:
-        logger.error(f"Channel File Processing Error: {e}")
-        # Note: In a channel, you generally do NOT want to reply with the error
-        # message, as it will break the channel feed. We only log it.
-
+        logger.error(f"File Storage Error: {e}")
+        await message.reply_text(f"❌ Error: {e}")
+        
