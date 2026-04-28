@@ -1,6 +1,7 @@
 import asyncio
 from aiohttp import web
 from pyrogram import Client, idle
+from pyrogram.types import Message
 from config import API_ID, API_HASH, BOT_TOKEN, PORT, BIN_CHANNEL
 
 bot = Client(
@@ -22,9 +23,12 @@ async def download_page(request):
     file_id = request.match_info["file_id"]
     try:
         msg = await bot.get_messages(int(BIN_CHANNEL), int(file_id))
-        if msg and msg.document:
-            file_name = msg.document.file_name or "Unknown"
-            file_size = f"{round(msg.document.file_size / (1024 * 1024), 2)} MB"
+        
+        # ✅ FIXED: Check document, video, AND audio
+        media = msg.document or msg.video or msg.audio
+        if media:
+            file_name = getattr(media, "file_name", None) or "Unknown"
+            file_size = f"{round(media.file_size / (1024 * 1024), 2)} MB"
         else:
             file_name = "Unknown"
             file_size = "Unknown"
@@ -38,6 +42,7 @@ async def download_page(request):
 <style>
 body{{font-family:Arial,sans-serif;text-align:center;background:#121212;color:white;padding-top:50px}}
 .dl-box{{border:1px solid #333;display:inline-block;padding:30px;border-radius:15px;background:#1e1e1e;box-shadow:0 4px 15px rgba(0,0,0,0.5)}}
+a{{color:#28a745;}}
 </style>
 <meta http-equiv="refresh" content="2;url=/download/{file_id}">
 </head>
@@ -46,24 +51,27 @@ body{{font-family:Arial,sans-serif;text-align:center;background:#121212;color:wh
 <h3>{file_name}</h3>
 <p>Size: {file_size}</p>
 <p>⏳ Download starting automatically...</p>
-<p>If it doesn't start, <a href="/download/{file_id}" style="color:#28a745;">click here</a></p>
+<p>If it doesn't start, <a href="/download/{file_id}">click here</a></p>
 </div>
 </body>
 </html>"""
     return web.Response(text=html, content_type="text/html")
+
 
 @routes.get("/download/{file_id}")
 async def start_download(request):
     file_id = request.match_info["file_id"]
     try:
         msg = await bot.get_messages(int(BIN_CHANNEL), int(file_id))
-        if not msg or not msg.document:
+        
+        # ✅ FIXED: Handle document, video, AND audio
+        media = msg.document or msg.video or msg.audio
+        if not media:
             return web.Response(text="File not found.", status=404)
 
-        doc = msg.document
-        file_name = doc.file_name or "download"
-        mime_type = doc.mime_type or "application/octet-stream"
-        file_size = doc.file_size
+        file_name = getattr(media, "file_name", None) or "download"
+        mime_type = getattr(media, "mime_type", None) or "application/octet-stream"
+        file_size = media.file_size
 
         response = web.StreamResponse(
             status=200,
