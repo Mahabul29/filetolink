@@ -1,7 +1,7 @@
 import logging
 from pyrogram import Client, filters, enums
-from pyrogram.types import Message
-from config import BIN_CHANNEL, FQDN, HAS_SSL, BOT_USERNAME
+from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
+from config import BIN_CHANNEL, FQDN, BOT_USERNAME
 
 logger = logging.getLogger(__name__)
 
@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 @Client.on_message(filters.command("start") & filters.private)
 async def start_cmd(client: Client, message: Message):
     try:
-        # Deep link support
+        # ── Deep link: /start file_123 ──
         if len(message.command) > 1:
             data = message.command[1]
             if data.startswith("file_"):
@@ -28,15 +28,23 @@ async def start_cmd(client: Client, message: Message):
                     )
                 return
 
-        # Normal /start
+        # ── Normal /start ──
         user_name = message.from_user.first_name if message.from_user else "User"
+
+        markup = InlineKeyboardMarkup([
+            [InlineKeyboardButton("📢 Updates Channel", url="https://t.me/JavaGoat")],
+            [InlineKeyboardButton("👨‍💻 Developer", url="https://t.me/Mahabul29")]
+        ])
+
         await message.reply_text(
             f"<b>👋 Hello {user_name}!</b>\n\n"
             "🤖 I am your <b>File to Link Bot</b>.\n\n"
-            "📤 Send or forward any file (video, document, audio) to me and "
-            "I will generate a high-speed direct download link instantly!\n\n"
-            "<i>Powered by JavaGoat Streaming</i>",
+            "📤 <b>How to use:</b>\n"
+            "Send or forward any <b>file, video, or audio</b> to me "
+            "and I will instantly generate a high-speed direct download link!\n\n"
+            "⚡ <i>Powered by JavaGoat Streaming</i>",
             parse_mode=enums.ParseMode.HTML,
+            reply_markup=markup,
             disable_web_page_preview=True
         )
 
