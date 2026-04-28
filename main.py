@@ -1,7 +1,6 @@
 import asyncio
 from aiohttp import web
-from pyrogram import Client, idle, filters, enums
-from pyrogram.types import Message
+from pyrogram import Client, idle
 from config import API_ID, API_HASH, BOT_TOKEN, PORT, BIN_CHANNEL
 
 bot = Client(
@@ -9,48 +8,8 @@ bot = Client(
     api_id=API_ID,
     api_hash=API_HASH,
     bot_token=BOT_TOKEN,
-    plugins=dict(root="plugins")   # Keep this for files.py
+    plugins=dict(root="plugins")
 )
-
-# ====================== START COMMAND (Direct Handler) ======================
-@bot.on_message(filters.command("start") & filters.private)
-async def start_cmd(client: Client, message: Message):
-    try:
-        # Deep link support (Get via Bot button)
-        if len(message.command) > 1:
-            data = message.command[1]
-            if data.startswith("file_"):
-                try:
-                    file_id = int(data.split("_")[1])
-                    await client.copy_message(
-                        chat_id=message.chat.id,
-                        from_chat_id=int(BIN_CHANNEL),
-                        message_id=file_id
-                    )
-                except Exception as e:
-                    await message.reply_text(
-                        "<b>❌ File not found or deleted.</b>",
-                        parse_mode=enums.ParseMode.HTML
-                    )
-                return
-
-        # Normal /start message
-        user_name = message.from_user.first_name if message.from_user else "User"
-        
-        await message.reply_text(
-            f"<b>👋 Hello {user_name}!</b>\n\n"
-            "🤖 I am your <b>File to Link Bot</b>.\n\n"
-            "📤 Send or forward any file (video, document, audio) to me and "
-            "I will generate a high-speed direct download link instantly!\n\n"
-            "<i>Powered by JavaGoat Streaming</i>",
-            parse_mode=enums.ParseMode.HTML,
-            disable_web_page_preview=True
-        )
-
-    except Exception as e:
-        print(f"Start handler error: {e}")
-        await message.reply_text("❌ Something went wrong! Please try again later.")
-
 
 routes = web.RouteTableDef()
 
