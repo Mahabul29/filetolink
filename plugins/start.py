@@ -1,53 +1,13 @@
-import logging
-from pyrogram import Client, filters, enums
+from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
-from config import BIN_CHANNEL, FQDN, BOT_USERNAME
-
-logger = logging.getLogger(__name__)
-
+from config import BIN_CHANNEL
 
 @Client.on_message(filters.command("start") & filters.private)
-async def start_cmd(client: Client, message: Message):
-    try:
-        # ── Deep link: /start file_123 ──
-        if len(message.command) > 1:
-            data = message.command[1]
-            if data.startswith("file_"):
-                try:
-                    file_id = int(data.split("_")[1])
-                    await client.copy_message(
-                        chat_id=message.chat.id,
-                        from_chat_id=int(BIN_CHANNEL),
-                        message_id=file_id
-                    )
-                except Exception as e:
-                    logger.error(f"Deep link error: {e}")
-                    await message.reply_text(
-                        "<b>❌ File not found or deleted.</b>",
-                        parse_mode=enums.ParseMode.HTML
-                    )
-                return
-
-        # ── Normal /start ──
-        user_name = message.from_user.first_name if message.from_user else "User"
-
-        markup = InlineKeyboardMarkup([
-            [InlineKeyboardButton("📢 Updates Channel", url="https://t.me/JavaGoat")],
-            [InlineKeyboardButton("👨‍💻 Developer", url="https://t.me/Mahabul29")]
-        ])
-
-        await message.reply_text(
-            f"<b>👋 Hello {user_name}!</b>\n\n"
-            "🤖 I am your <b>File to Link Bot</b>.\n\n"
-            "📤 <b>How to use:</b>\n"
-            "Send or forward any <b>file, video, or audio</b> to me "
-            "and I will instantly generate a high-speed direct download link!\n\n"
-            "⚡ <i>Powered by JavaGoat Streaming</i>",
-            parse_mode=enums.ParseMode.HTML,
-            reply_markup=markup,
-            disable_web_page_preview=True
-        )
-
-    except Exception as e:
-        logger.error(f"Start handler error: {e}", exc_info=True)
-        await message.reply_text("❌ Something went wrong! Please try again.")
+async def start_cmd(client, message):
+    await message.reply_text(
+        "👋 **Hello! Send me any file to get a link.**",
+        reply_markup=InlineKeyboardMarkup([[
+            InlineKeyboardButton("Dev", url="https://t.me/Mahabul29")
+        ]])
+    )
+    
