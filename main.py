@@ -24,7 +24,7 @@ def download_page(file_id):
     try:
         bot_loop = bot.loop
         msg = asyncio.run_coroutine_threadsafe(
-            bot.get_messages(BIN_CHANNEL, int(file_id)),
+            bot.get_messages(int(BIN_CHANNEL), int(file_id)),
             bot_loop
         ).result(timeout=30)
         if msg and msg.document:
@@ -48,7 +48,7 @@ def start_download(file_id):
     try:
         bot_loop = bot.loop
         msg = asyncio.run_coroutine_threadsafe(
-            bot.get_messages(BIN_CHANNEL, int(file_id)),
+            bot.get_messages(int(BIN_CHANNEL), int(file_id)),
             bot_loop
         ).result(timeout=30)
         if not msg or not msg.document:
