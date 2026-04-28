@@ -16,17 +16,16 @@ class Bot(Client):
     async def start(self):
         await super().start()
         
-        # This part forces the bot to 'cache' the channel
+        # This part forces the bot to 'cache' the channel ID
         try:
-            # We convert to int just in case
-            target = int(LOG_CHANNEL)
-            storage_chat = await self.get_chat(target)
-            print(f"✅ SUCCESS: Connected to {storage_chat.title}")
+            # We convert the config value to an integer for the API call
+            storage_chat = await self.get_chat(int(LOG_CHANNEL))
+            print(f"✅ SUCCESS: Connected to {storage_chat.title} ({LOG_CHANNEL})")
         except Exception as e:
             print(f"❌ Peer ID Error: {e}")
-            print("Action Needed: Send the channel username to the bot once!")
+            print("💡 TIP: Make the channel PUBLIC temporarily and send the @username to the bot.")
 
-        # Keep Koyeb Happy
+        # Web Server for Koyeb Health Checks
         app = web.Application()
         app.router.add_get("/", lambda r: web.Response(text="Bot is Running"))
         runner = web.AppRunner(app)
