@@ -16,22 +16,21 @@ class Bot(Client):
     async def start(self):
         await super().start()
         
-        # Resolve the Peer ID immediately upon startup
+        # This fixes the "Peer ID Invalid" error by pre-loading the channel
         try:
-            await self.get_chat(int(LOG_CHANNEL))
-            print(f"✅ Connected to Storage Channel: {LOG_CHANNEL}")
+            await self.get_chat(LOG_CHANNEL)
+            print(f"✅ Connected to Storage: {LOG_CHANNEL}")
         except Exception as e:
-            print(f"❌ Peer ID Error: Could not find channel {LOG_CHANNEL}. Error: {e}")
+            print(f"❌ Storage Error: {e}")
 
-        # Web Server for Koyeb Health Checks
+        # This fixes the Koyeb Health Check
         app = web.Application()
-        app.router.add_get("/", lambda r: web.Response(text="Bot is Running"))
+        app.router.add_get("/", lambda r: web.Response(text="Bot is Alive"))
         runner = web.AppRunner(app)
         await runner.setup()
         site = web.TCPSite(runner, "0.0.0.0", PORT)
         asyncio.create_task(site.start())
-        
-        print("🤖 Bot fully started and Health Check live.")
+        print(f"🚀 Web Server started on port {PORT}")
 
     async def stop(self, *args):
         await super().stop()
