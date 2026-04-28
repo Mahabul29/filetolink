@@ -16,16 +16,16 @@ class Bot(Client):
     async def start(self):
         await super().start()
         
-        # 1. Warm up the channel to stop 'Peer id invalid' errors
+        # Resolve the Peer ID by fetching the chat directly
         try:
-            await self.get_chat(int(LOG_CHANNEL))
-            print(f"✅ Storage Channel Connected: {LOG_CHANNEL}")
+            storage_chat = await self.get_chat(int(LOG_CHANNEL))
+            print(f"✅ Connection Established with: {storage_chat.title}")
         except Exception as e:
-            print(f"❌ Storage Error: {e}")
+            print(f"❌ critical Storage Error: {e}")
 
-        # 2. Koyeb Health Check Server
+        # Koyeb Health Check Server
         app = web.Application()
-        app.router.add_get("/", lambda r: web.Response(text="Bot is Running"))
+        app.router.add_get("/", lambda r: web.Response(text="Bot is Alive"))
         runner = web.AppRunner(app)
         await runner.setup()
         site = web.TCPSite(runner, "0.0.0.0", PORT)
