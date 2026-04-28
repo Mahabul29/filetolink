@@ -1,1 +1,6 @@
-db
+/filetolink
+  /template
+    req.html
+    dl.html
+  main.py
+  config.py
