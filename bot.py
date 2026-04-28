@@ -1,12 +1,8 @@
-
 import logging
 from pyrogram import Client
 from config import API_ID, API_HASH, BOT_TOKEN
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO)
 
 bot = Client(
     "FileStreamBot",
