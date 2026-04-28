@@ -1,9 +1,10 @@
 import logging
 from pyrogram import Client, filters, enums
 from pyrogram.types import Message
-from config import BIN_CHANNEL
+from config import BIN_CHANNEL, FQDN, HAS_SSL, BOT_USERNAME
 
 logger = logging.getLogger(__name__)
+
 
 @Client.on_message(filters.command("start") & filters.private)
 async def start_cmd(client: Client, message: Message):
@@ -21,7 +22,10 @@ async def start_cmd(client: Client, message: Message):
                     )
                 except Exception as e:
                     logger.error(f"Deep link error: {e}")
-                    await message.reply_text("<b>❌ File not found or deleted.</b>", parse_mode=enums.ParseMode.HTML)
+                    await message.reply_text(
+                        "<b>❌ File not found or deleted.</b>",
+                        parse_mode=enums.ParseMode.HTML
+                    )
                 return
 
         # Normal /start
@@ -29,7 +33,8 @@ async def start_cmd(client: Client, message: Message):
         await message.reply_text(
             f"<b>👋 Hello {user_name}!</b>\n\n"
             "🤖 I am your <b>File to Link Bot</b>.\n\n"
-            "📤 Send or forward any file to me and I will generate a high-speed download link instantly!\n\n"
+            "📤 Send or forward any file (video, document, audio) to me and "
+            "I will generate a high-speed direct download link instantly!\n\n"
             "<i>Powered by JavaGoat Streaming</i>",
             parse_mode=enums.ParseMode.HTML,
             disable_web_page_preview=True
