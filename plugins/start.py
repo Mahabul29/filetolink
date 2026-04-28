@@ -8,6 +8,7 @@ logger = logging.getLogger(__name__)
 @Client.on_message(filters.command("start") & filters.private)
 async def start_cmd(client: Client, message: Message):
     try:
+        # Deep linking support (when user clicks "Get via Bot" button)
         if len(message.command) > 1:
             data = message.command[1]
             if data.startswith("file_"):
@@ -21,23 +22,23 @@ async def start_cmd(client: Client, message: Message):
                 except Exception as e:
                     logger.error(f"Deep link error: {e}")
                     await message.reply_text(
-                        "<b>❌ File not found or deleted.</b>",
+                        "<b>❌ File not found or has been deleted.</b>",
                         parse_mode=enums.ParseMode.HTML
                     )
-                return  # ← always return, stop here
+                return   # Important: Stop here for deep links
 
-        # Normal /start — no deep link
+        # Normal /start command
         user_name = message.from_user.first_name if message.from_user else "User"
+        
         await message.reply_text(
             f"<b>👋 Hello {user_name}!</b>\n\n"
             "🤖 I am your <b>File to Link Bot</b>.\n\n"
-            "📤 Send or forward any file to me and I will "
-            "generate a high-speed download link instantly!\n\n"
+            "📤 Send or forward any file (document, video, audio) to me and "
+            "I will generate a high-speed direct download link instantly!\n\n"
             "<i>Powered by JavaGoat Streaming</i>",
             parse_mode=enums.ParseMode.HTML,
             disable_web_page_preview=True
         )
 
     except Exception as e:
-        logger.error(f"Start handler error: {e}")
-        await message.reply_text("Something went wrong! Please try again later.")
+        logger.error(f"Start handler error: {e}", exc_info=True)
