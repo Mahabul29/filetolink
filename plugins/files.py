@@ -1,5 +1,5 @@
 import logging
-from pyrogram import Client, filters
+from pyrogram import Client, filters, enums
 from config import LOG_CHANNEL, FQDN
 
 logger = logging.getLogger(__name__)
@@ -17,8 +17,8 @@ async def file_handler(client, message):
             f"<b>✅ Your Download Link:</b>\n"
             f"🔗 <code>{download_link}</code>\n\n"
             f"<i>Powered by JavaGoat Streaming</i>",
-            parse_mode="html"
+            parse_mode=enums.ParseMode.HTML
         )
     except Exception as e:
         logger.error(f"File Storage Error: {e}")
-        await message.reply_text(f"❌ <b>Error:</b> <code>{e}</code>")
+        await message.reply_text(f"❌ Error: {e}")
