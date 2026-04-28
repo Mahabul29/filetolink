@@ -1,3 +1,4 @@
+
 import os
 import threading
 from flask import Flask, render_template
@@ -28,16 +29,19 @@ bot = Client(
 
 def run_web():
     """Function to run the web server."""
-    # We use '0.0.0.0' so it's accessible externally
-    app_web.run(host="0.0.0.0", port=PORT)
+    # Wrapping PORT in int() ensures Koyeb reads it as a number
+    try:
+        app_web.run(host="0.0.0.0", port=int(PORT))
+    except Exception as e:
+        print(f"Error starting web server: {e}")
 
 if __name__ == "__main__":
     # A. Start the bot first
+    # If this hangs, check your MongoDB Network Access (0.0.0.0/0)
     bot.start()
     print("✅ Bot started successfully!")
 
     # B. Start the Web Server in a separate thread (Non-blocking)
-    # This is the "Magic" that fixes the silent bot issue
     web_thread = threading.Thread(target=run_web)
     web_thread.daemon = True
     web_thread.start()
