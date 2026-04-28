@@ -1,22 +1,27 @@
 from pyrogram import Client
-from config import API_ID, API_HASH, BOT_TOKEN
+import os
+
+# We pull these from your Koyeb Environment Variables
+API_ID = int(os.environ.get("API_ID"))
+API_HASH = os.environ.get("API_HASH")
+BOT_TOKEN = os.environ.get("BOT_TOKEN")
 
 class Bot(Client):
     def __init__(self):
         super().__init__(
-            name="filetolink",
+            "my_bot_session",  # This is the 'name'. NO 'name=' label allowed here.
             api_id=API_ID,
             api_hash=API_HASH,
             bot_token=BOT_TOKEN,
-            plugins=dict(root="plugins") # This loads your start.py, files.py, etc.
+            plugins=dict(root="plugins")
         )
 
     async def start(self):
         await super().start()
-        print("✅ Bot is Online!")
+        print("✅ Bot Started Successfully")
 
     async def stop(self, *args):
         await super().stop()
-        print("🛑 Bot Stopped!")
+        print("🛑 Bot Stopped")
 
 bot = Bot()
