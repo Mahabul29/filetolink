@@ -1,6 +1,9 @@
+
 from pyrogram import Client, filters, enums
 from pyrogram.types import Message
 
+# THIS LINE WAS MISSING:
+@Client.on_message(filters.command("start") & filters.private)
 async def start_cmd(client: Client, message: Message):
     try:
         user_name = message.from_user.first_name if message.from_user else "User"
@@ -15,7 +18,7 @@ async def start_cmd(client: Client, message: Message):
         
         await message.reply_text(
             text=welcome_text,
-            parse_mode=enums.ParseMode.HTML,   # ← This is the correct way in Pyrogram v2
+            parse_mode=enums.ParseMode.HTML,
             disable_web_page_preview=True
         )
         
@@ -25,3 +28,4 @@ async def start_cmd(client: Client, message: Message):
             await message.reply_text("Something went wrong! Please try again.")
         except:
             pass
+            
