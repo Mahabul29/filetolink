@@ -5,25 +5,15 @@
     <style>
         body { font-family: Arial, sans-serif; text-align: center; background: #121212; color: white; padding-top: 50px; }
         .dl-box { border: 1px solid #333; display: inline-block; padding: 30px; border-radius: 15px; background: #1e1e1e; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        .btn { 
-            background: #28a745; 
-            color: white; 
-            padding: 12px 25px; 
-            text-decoration: none; 
-            border-radius: 5px; 
-            font-weight: bold;
-            display: inline-block;
-            margin-top: 15px;
-            transition: 0.3s;
-        }
-        .btn:hover { background: #218838; transform: scale(1.05); }
     </style>
+    <meta http-equiv="refresh" content="2;url=/download/{{ file_id }}">
 </head>
 <body>
     <div class="dl-box">
-        <h3>File Name: {{ file_name }}</h3>
+        <h3>{{ file_name }}</h3>
         <p>Size: {{ file_size }}</p>
-        <a href="/dl/{{ file_id }}" class="btn" download>📥 START DOWNLOAD NOW</a>
+        <p>⏳ Download starting automatically...</p>
+        <p>If it doesn't start, <a href="/download/{{ file_id }}" style="color:#28a745;">click here</a></p>
     </div>
 </body>
 </html>
