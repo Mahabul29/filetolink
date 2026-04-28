@@ -1,5 +1,4 @@
-pyrogram==2.0.106
-TgCrypto
+pyrogram
+tgcrypto
 aiohttp
-pymongo[srv]
-motor
+python-dotenv
