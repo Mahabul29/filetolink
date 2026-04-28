@@ -16,7 +16,11 @@ async def start_cmd(client: Client, message: Message):
             await message.reply_text(f"❌ File not found: {e}")
         return
 
-    await message.reply_text(
-        f"<b>👋 Hello {message.from_user.first_name}!</b>\n\nSend me a file to get a link.",
-        parse_mode=enums.ParseMode.HTML
+    await message.reply_photo(
+    photo="https://img.uhdpaper.com/wallpaper/genshin-impact-furina-game-art-16@1@m-pc-4k.jpg",
+    caption=f"<b>👋 Hey {message.from_user.first_name}!</b>\n\n"
+            "Send any file or media to get:\n\n"
+            "• <b>Direct Download Link</b>\n\n"
+            "Just send the file now 👇",
+    parse_mode=enums.ParseMode.HTML
     )
