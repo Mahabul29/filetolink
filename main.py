@@ -3,7 +3,6 @@ import asyncio
 import threading
 from flask import Flask, render_template, Response, stream_with_context
 from pyrogram import Client, idle
-from pyrogram.errors import FloodWait
 from config import API_ID, API_HASH, BOT_TOKEN, PORT, BIN_CHANNEL
 
 app_web = Flask(__name__, template_folder='template')
@@ -15,8 +14,6 @@ bot = Client(
     bot_token=BOT_TOKEN,
     plugins=dict(root="plugins")
 )
-
-loop = asyncio.new_event_loop()
 
 @app_web.route('/')
 def index():
@@ -34,10 +31,12 @@ def download_page(file_id):
 @app_web.route('/download/<file_id>')
 def start_download(file_id):
     try:
-        # Get message from Pyrogram using the shared event loop
+        # Get Pyrogram's own loop
+        bot_loop = bot.loop
+
         msg = asyncio.run_coroutine_threadsafe(
             bot.get_messages(BIN_CHANNEL, int(file_id)),
-            loop
+            bot_loop
         ).result(timeout=30)
 
         if not msg or not msg.document:
@@ -49,15 +48,12 @@ def start_download(file_id):
         file_size = doc.file_size
 
         def generate():
-            async def stream():
-                async for chunk in bot.stream_media(msg):
-                    yield chunk
-
-            ait = stream().__aiter__()
+            ait = bot.stream_media(msg).__aiter__()
             while True:
                 try:
                     chunk = asyncio.run_coroutine_threadsafe(
-                        ait.__anext__(), loop
+                        ait.__anext__(),
+                        bot_loop
                     ).result(timeout=60)
                     yield chunk
                 except StopAsyncIteration:
@@ -84,8 +80,8 @@ def run_web():
     app_web.run(host="0.0.0.0", port=int(PORT), threaded=True)
 
 
-async def main():
-    await bot.start()
+if __name__ == "__main__":
+    bot.start()
     print("✅ Bot started!")
 
     web_thread = threading.Thread(target=run_web)
@@ -93,9 +89,6 @@ async def main():
     web_thread.start()
     print(f"✅ Web server active on port {PORT}")
 
-    await idle()
-    await bot.stop()
-
-
-if __name__ == "__main__":
-    loop.run_until_complete(main())
+    print("🚀 Listening...")
+    idle()
+    bot.stop()
