@@ -1,10 +1,10 @@
 import logging
 from pyrogram import Client, filters, enums
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
+# We only need LOG_CHANNEL now since they are the same
 from config import LOG_CHANNEL, FQDN, BOT_USERNAME
 
 logger = logging.getLogger(__name__)
-
 
 # ====================== PRIVATE CHAT FILE HANDLER ======================
 @Client.on_message(
@@ -13,11 +13,17 @@ logger = logging.getLogger(__name__)
 )
 async def file_handler(client: Client, message: Message):
     try:
-        # Copy file to LOG_CHANNEL/BIN_CHANNEL to store it
-        copied_msg = await message.copy(chat_id=int(LOG_CHANNEL))
+        # Copy file to LOG_CHANNEL to store it and get a permanent ID
+        copied_msg = await client.copy_message(
+            chat_id=int(LOG_CHANNEL),
+            from_chat_id=message.chat.id,
+            message_id=message.id
+        )
         file_id = copied_msg.id
 
-        clean_host = FQDN.strip().rstrip("/")
+        # Sanitize FQDN (Remove https:// and trailing slashes)
+        clean_host = FQDN.replace("https://", "").replace("http://", "").rstrip("/")
+        
         stream_link = f"https://{clean_host}/dl/{file_id}"
         bot_link = f"https://t.me/{BOT_USERNAME}?start=file_{file_id}"
 
@@ -28,7 +34,7 @@ async def file_handler(client: Client, message: Message):
 
         await message.reply_text(
             f"<b>✅ Your Download Link is Ready!</b>\n\n"
-            f"🔗 <code>{stream_link}</code>\n\n"
+            f"<b>🔗 Link:</b> <code>{stream_link}</code>\n\n"
             f"⚡ <i>Powered by JavaGoat Streaming</i>",
             parse_mode=enums.ParseMode.HTML,
             reply_markup=reply_markup,
@@ -46,9 +52,16 @@ async def file_handler(client: Client, message: Message):
     (filters.document | filters.video | filters.audio)
 )
 async def channel_file_handler(client: Client, message: Message):
+    # CRITICAL: If this message IS in the LOG_CHANNEL already, stop here.
+    # This prevents the bot from trying to add buttons to its own storage channel.
+    if message.chat.id == int(LOG_CHANNEL):
+        return
+
     try:
+        # Since it's a channel post, we use the original message ID
         file_id = message.id
-        clean_host = FQDN.strip().rstrip("/")
+        clean_host = FQDN.replace("https://", "").replace("http://", "").rstrip("/")
+        
         stream_link = f"https://{clean_host}/dl/{file_id}"
         bot_link = f"https://t.me/{BOT_USERNAME}?start=file_{file_id}"
 
@@ -59,6 +72,7 @@ async def channel_file_handler(client: Client, message: Message):
             ]
         ])
 
+        # Add the buttons to the channel post
         await client.edit_message_reply_markup(
             chat_id=message.chat.id,
             message_id=message.id,
@@ -67,3 +81,4 @@ async def channel_file_handler(client: Client, message: Message):
 
     except Exception as e:
         logger.error(f"Channel handler error: {e}", exc_info=True)
+        
