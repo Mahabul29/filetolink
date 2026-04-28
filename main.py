@@ -1,36 +1,49 @@
 import os
+import threading
 from flask import Flask, render_template
-from pyrogram import Client, idle  # Add 'idle' here
+from pyrogram import Client, idle
 from config import API_ID, API_HASH, BOT_TOKEN, PORT
-import threading # We need this to run both at once
 
+# 1. Setup Flask for Koyeb Health Checks
 app_web = Flask(__name__, template_folder='template')
-bot = Client("my_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
 @app_web.route('/')
 def index():
+    # This keeps the 'Starting' circle from looping on Koyeb
     return "Bot Web Server is Running Successfully!", 200
 
 @app_web.route('/dl/<file_id>')
 def download_page(file_id):
+    # This renders your dl.html inside the template folder
     return render_template('dl.html', file_name="Your File", direct_link="#")
 
+# 2. Setup the Bot
+bot = Client(
+    "my_bot",
+    api_id=API_ID,
+    api_hash=API_HASH,
+    bot_token=BOT_TOKEN,
+    plugins=dict(root="plugins")  # Ensure your commands are in the 'plugins' folder
+)
+
 def run_web():
-    # This runs the web server
+    """Function to run the web server."""
+    # We use '0.0.0.0' so it's accessible externally
     app_web.run(host="0.0.0.0", port=PORT)
 
 if __name__ == "__main__":
-    # 1. Start the bot
+    # A. Start the bot first
     bot.start()
-    print("Bot Started!")
+    print("✅ Bot started successfully!")
 
-    # 2. Start the Web Server in a separate thread
-    # This allows the bot to keep running in the main thread
-    t = threading.Thread(target=run_web)
-    t.daemon = True
-    t.start()
-    print(f"Web Server started on port {PORT}")
+    # B. Start the Web Server in a separate thread (Non-blocking)
+    # This is the "Magic" that fixes the silent bot issue
+    web_thread = threading.Thread(target=run_web)
+    web_thread.daemon = True
+    web_thread.start()
+    print(f"✅ Web Server active on port {PORT}")
 
-    # 3. Keep the bot alive
+    # C. Keep the main thread alive to listen for Telegram messages
+    print("🚀 Bot is now listening for messages...")
     idle()
     
