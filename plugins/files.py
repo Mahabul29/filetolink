@@ -21,13 +21,6 @@ async def file_handler(client, message):
         file_name = getattr(file_obj, 'file_name', None) or "Unknown"
         file_size = f"{round(file_obj.file_size / (1024 * 1024), 2)} MB"
 
-        info_text = (
-            f"📑 <b>FILE DETAILS FOUND</b>\n\n"
-            f"📝 <b>Name:</b> <code>{file_name}</code>\n"
-            f"⚖️ <b>Size:</b> <code>{file_size}</code>\n\n"
-            f"🔗 <i>Your direct download links are generated below:</i>"
-        )
-
         reply_markup = InlineKeyboardMarkup([
             [
                 InlineKeyboardButton("Server 1 🔺", url=download_link),
@@ -35,8 +28,8 @@ async def file_handler(client, message):
             ]
         ])
 
-        # Send file first
-        await message.reply_document(
+        await client.send_document(
+            chat_id=message.chat.id,
             document=file_obj.file_id,
             caption=(
                 f"📑 <b>FILE DETAILS FOUND</b>\n\n"
