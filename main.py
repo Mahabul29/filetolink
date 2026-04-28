@@ -27,7 +27,6 @@ def download_page(file_id):
             bot.get_messages(BIN_CHANNEL, int(file_id)),
             bot_loop
         ).result(timeout=30)
-
         if msg and msg.document:
             file_name = msg.document.file_name or "Unknown"
             file_size = f"{round(msg.document.file_size / (1024 * 1024), 2)} MB"
@@ -37,7 +36,6 @@ def download_page(file_id):
     except Exception as e:
         file_name = "Unknown"
         file_size = "Unknown"
-
     return render_template(
         'dl.html',
         file_name=file_name,
@@ -49,20 +47,16 @@ def download_page(file_id):
 def start_download(file_id):
     try:
         bot_loop = bot.loop
-
         msg = asyncio.run_coroutine_threadsafe(
             bot.get_messages(BIN_CHANNEL, int(file_id)),
             bot_loop
         ).result(timeout=30)
-
         if not msg or not msg.document:
             return "File not found.", 404
-
         doc = msg.document
         file_name = doc.file_name or "download"
         mime_type = doc.mime_type or "application/octet-stream"
         file_size = doc.file_size
-
         def generate():
             ait = bot.stream_media(msg).__aiter__()
             while True:
@@ -77,7 +71,6 @@ def start_download(file_id):
                 except Exception as e:
                     print(f"Chunk error: {e}")
                     break
-
         return Response(
             stream_with_context(generate()),
             headers={
@@ -86,10 +79,22 @@ def start_download(file_id):
                 "Content-Length": str(file_size),
             }
         )
-
     except Exception as e:
         print(f"Download error: {e}")
         return f"Error: {str(e)}", 500
 
 
-def run
+def run_web():
+    app_web.run(host="0.0.0.0", port=int(PORT), threaded=True)
+
+
+if __name__ == "__main__":
+    bot.start()
+    print("✅ Bot started!")
+    web_thread = threading.Thread(target=run_web)
+    web_thread.daemon = True
+    web_thread.start()
+    print(f"✅ Web server active on port {PORT}")
+    print("🚀 Listening...")
+    idle()
+    bot.stop()
