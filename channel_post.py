@@ -1,86 +1,75 @@
 """
 channel_post.py  —  Drop into /plugins/ folder. No other changes needed.
 
-When the bot is admin in a channel (with Edit Messages permission),
-every file post will automatically get two inline buttons:
-  🚀 Fast Download   →  your web server /dl/<file_unique_id>
-  🤖 Get via Bot     →  bot DM deep-link
+Tested pattern: uses @app.on_message via Client instance passed by Pyrogram.
+Works with Pyrogram 2.x (which this bot uses).
 """
 
 import asyncio
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-# ── Read config from info.py (same file the rest of the bot uses) ────────────
+# ── Read BASE_URL from info.py safely ───────────────────────────────────────
 try:
     from info import BASE_URL
 except ImportError:
-    BASE_URL = None   # will fall back to bot-DM-only button if not set
+    BASE_URL = None
 
-# ── Supported media attributes ───────────────────────────────────────────────
+
 _MEDIA_ATTRS = (
     "document", "video", "audio", "photo",
-    "voice", "video_note", "animation", "sticker",
+    "voice", "video_note", "animation",
 )
 
 _MEDIA_FILTER = (
-    filters.document | filters.video   | filters.audio     |
+    filters.document | filters.video   | filters.audio |
     filters.photo    | filters.voice   | filters.animation |
-    filters.sticker  | filters.video_note
+    filters.video_note
 )
 
 
-def _get_media(message):
-    """Return (file_id, file_unique_id) or (None, None)."""
+def _get_file_unique_id(message):
     for attr in _MEDIA_ATTRS:
         media = getattr(message, attr, None)
         if media:
-            fid  = getattr(media, "file_id", None)
-            fuid = getattr(media, "file_unique_id", None)
-            return fid, fuid
-    return None, None
+            return getattr(media, "file_unique_id", None)
+    return None
 
 
-def _build_keyboard(file_unique_id: str, bot_username: str) -> InlineKeyboardMarkup:
-    """
-    Build the two-button layout shown in the screenshot.
-    If BASE_URL is not set in info.py, Fast Download links to the bot DM as well.
-    """
-    bot_link = f"https://t.me/{bot_username}?start={file_unique_id}"
-
-    if BASE_URL:
-        dl_link = f"{BASE_URL.rstrip('/')}/dl/{file_unique_id}"
-    else:
-        dl_link = bot_link   # fallback
-
+def _build_keyboard(fuid: str, bot_username: str) -> InlineKeyboardMarkup:
+    bot_link = f"https://t.me/{bot_username}?start={fuid}"
+    dl_link  = f"{BASE_URL.rstrip('/')}/dl/{fuid}" if BASE_URL else bot_link
     return InlineKeyboardMarkup([
         [InlineKeyboardButton("🚀 Fast Download", url=dl_link)],
         [InlineKeyboardButton("🤖 Get via Bot",   url=bot_link)],
     ])
 
 
-# ── Handler: new channel post with a file ────────────────────────────────────
-@Client.on_message(filters.channel & _MEDIA_FILTER)
-async def on_channel_file(client: Client, message):
+# ── Main handler ─────────────────────────────────────────────────────────────
+@Client.on_message(filters.channel & _MEDIA_FILTER, group=1)
+async def channel_file_handler(client: Client, message):
     try:
-        file_id, file_unique_id = _get_media(message)
-        if not file_unique_id:
+        fuid = _get_file_unique_id(message)
+        if not fuid:
             return
 
         me = await client.get_me()
-        keyboard = _build_keyboard(file_unique_id, me.username)
+        keyboard = _build_keyboard(fuid, me.username)
 
-        await asyncio.sleep(0.3)          # tiny delay to avoid flood-wait
-        await message.edit_reply_markup(reply_markup=keyboard)
+        await asyncio.sleep(1)   # wait 1s so Telegram registers the post first
+        await client.edit_message_reply_markup(
+            chat_id    = message.chat.id,
+            message_id = message.id,
+            reply_markup = keyboard
+        )
+        print(f"[channel_post] ✅ Buttons added to msg {message.id} in {message.chat.title}")
 
     except Exception as e:
-        # Bot may lack edit rights — silently skip
-        print(f"[channel_post] msg={message.id} skipped: {e}")
+        print(f"[channel_post] ❌ Failed msg {message.id}: {e}")
 
 
-# ── Handler: re-attach buttons if an admin edits and wipes them ──────────────
-@Client.on_edited_message(filters.channel & _MEDIA_FILTER)
-async def on_channel_edit(client: Client, message):
+@Client.on_edited_message(filters.channel & _MEDIA_FILTER, group=1)
+async def channel_edit_handler(client: Client, message):
     if message.reply_markup:
-        return   # buttons already there
-    await on_channel_file(client, message)
+        return
+    await channel_file_handler(client, message)
