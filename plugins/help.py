@@ -8,8 +8,8 @@ logger = logging.getLogger(__name__)
 @Client.on_message(filters.command("help") & filters.private)
 async def help_cmd(client: Client, message: Message):
     markup = InlineKeyboardMarkup([
-        [InlineKeyboardButton("📢 Updates", url="https://t.me/JavaGoat")],
-        [InlineKeyboardButton("👨‍💻 Developer", url="https://t.me/Mahabul29")]
+        [InlineKeyboardButton("Updates", url="https://t.me/JavaGoat")],
+        [InlineKeyboardButton("Developer", url="https://t.me/Mahabul29")]
     ])
 
     await message.reply_text(
