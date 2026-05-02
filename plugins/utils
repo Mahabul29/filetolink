@@ -1,0 +1,28 @@
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+
+class Buttons:
+    # Main Start Menu Buttons
+    START_BUTTONS = InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton("ᴀʙᴏᴜᴛ", callback_data="about"),
+            InlineKeyboardButton("ʜᴇʟᴘ", callback_data="help")
+        ],
+        [
+            InlineKeyboardButton("ᴅᴇᴠʟᴏᴘᴇʀ", url="https://t.me/Moon")
+        ]
+    ])
+
+    # The Back Button used in sub-menus
+    BACK_BUTTON = InlineKeyboardMarkup([
+        [InlineKeyboardButton("ʙᴀᴄᴋ", callback_data="back")]
+    ])
+
+    # The Download buttons for files
+    @staticmethod
+    def file_links(stream_link, bot_link):
+        return InlineKeyboardMarkup([
+            [
+                InlineKeyboardButton("ᴅᴏᴡɴʟᴏᴀᴅ", url=stream_link),
+                InlineKeyboardButton("ʙᴏᴛ", url=bot_link)
+            ]
+        ])
