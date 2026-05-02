@@ -8,7 +8,7 @@ class Buttons:
             InlineKeyboardButton("ʜᴇʟᴘ", callback_data="help")
         ],
         [
-            InlineKeyboardButton("🧑‍💻 Developer 🧑‍💻", url="https://t.me/Moon")
+            InlineKeyboardButton("ᴅᴇᴠʟᴏᴘᴇʀ", url="https://t.me/Mahabul201")
         ]
     ])
 
