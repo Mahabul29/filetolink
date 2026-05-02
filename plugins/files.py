@@ -12,7 +12,7 @@ def get_download_link(file_id):
 @Client.on_message(filters.private & (filters.document | filters.video | filters.audio))
 async def private_handler(client: Client, message: Message):
     try:
-        # 1. Store file in Log Channel
+        # 1. Store file in Log Channel (using the combined LOG_CHANNEL)
         copied_msg = await message.copy(chat_id=LOG_CHANNEL)
 
         # 2. Generate Links
@@ -24,10 +24,10 @@ async def private_handler(client: Client, message: Message):
         file_size = getattr(media, "file_size", 0)
         size_mb = round(file_size / (1024 * 1024), 2)
 
-        # 4. Generate markup
+        # 4. Generate markup (Side-by-Side)
         markup = Buttons.file_links(download_link, bot_link)
 
-        # 5. Send Reply (Links are outside code tags to keep them clickable)
+        # 5. Send Reply (Links are outside code tags to stay blue/clickable)
         await message.reply_text(
             f"<b>✅ File Stored Successfully!</b>\n\n"
             f"📁 <b>Name:</b> <code>{file_name}</code>\n"
