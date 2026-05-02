@@ -1,60 +1,73 @@
 import time
-from pyrogram import Client, filters, enums
-from pyrogram.types import Message
-from config import LOG_CHANNEL, ADMINS 
+import asyncio
+from pyrogram import Client, filters
+from pyrogram.errors import FloodWait, UserIsBlocked, InputUserDeactivated
+from config import LOG_CHANNEL, ADMINS
 from plugins.utils.markup import Buttons
+from plugins.utils.database import db 
 
 @Client.on_message(filters.command("start") & filters.private)
-async def start_cmd(client: Client, message: Message):
-    user = message.from_user
+async def start_cmd(client, message):
+    # Save user to MongoDB automatically
+    await db.add_user(message.from_user.id)
     
-    # 1. Log Channel Notification
-    try:
-        await client.send_message(
-            LOG_CHANNEL,
-            f"👤 <b>New User:</b> {user.first_name}\n‣ <b>ID:</b> <code>{user.id}</code>"
-        )
-    except:
-        pass
-
-    # 2. File Retrieval Logic
-    if len(message.command) > 1 and message.command[1].startswith("file_"):
-        try:
-            file_id = int(message.command[1].replace("file_", ""))
-            await client.copy_message(
-                chat_id=message.chat.id,
-                from_chat_id=LOG_CHANNEL,
-                message_id=file_id
-            )
-        except Exception:
-            await message.reply_text("❌ <b>File not found or deleted.</b>")
-        return
-
-    # 3. Main Start Menu
+    caption = (
+        f"👋 <b>ʜᴇʏ {message.from_user.first_name}!!</b>\n\n"
+        "ɪ'ᴍ ᴛᴇʟᴇɢʀᴀᴍ ꜰɪʟᴇꜱ ꜱᴛʀᴇᴀᴍɪɴɢ ʙᴏᴛ ᴀꜱ ᴡᴇʟʟ ᴅɪʀᴇᴄᴛ ʟɪɴᴋꜱ ɢᴇɴᴇʀᴀᴛᴏʀ!!\n\n"
+        "ᴊᴜꜱᴛ ꜱᴇɴᴅ ᴍᴇ ᴀɴʏ ꜰɪʟᴇ (ᴏʀ) ᴍᴇᴅɪᴀ ꜰʀᴏᴍ ᴛᴇʟᴇɢʀᴀᴍ!!\n\n"
+        "<b>ᴜꜱᴇ ʙᴜᴛᴛᴏɴꜱ ʙᴇʟᴏᴡ ᴛᴏ ᴋɴᴏᴡ ᴍᴇ ᴍᴏʀᴇ 👇</b>"
+    )
     await message.reply_photo(
         photo="https://img.uhdpaper.com/wallpaper/genshin-impact-furina-game-art-16@1@m-pc-4k.jpg",
-        caption=f"👋 <b>Hey {user.first_name}!</b>\n\n"
-                "I can convert your files into high-speed direct links.\n\n"
-                "Just send any file now 👇",
+        caption=caption,
         reply_markup=Buttons.START_BUTTONS
     )
 
-# --- NEW COMMANDS ---
-
+# --- PING COMMAND ---
 @Client.on_message(filters.command("ping") & filters.private)
 async def ping_cmd(client, message):
     start = time.time()
-    msg = await message.reply_text("🚀 Pinging...")
+    msg = await message.reply_text("🚀")
     end = time.time()
-    await msg.edit_text(f"<b>🏓 Pong!</b>\n<code>{round((end - start) * 1000)}ms</code>")
+    await msg.edit_text(f"🏓 <b>ᴘᴏɴɢ!!</b>\n<code>{round((end - start) * 1000)}ᴍꜱ</code>")
 
+# --- USERS COUNT ---
 @Client.on_message(filters.command("users") & filters.user(ADMINS))
-async def users_cmd(client, message):
-    await message.reply_text("<b>👥 Total Members:</b> <code>Database integration needed</code>")
+async def users_count_cmd(client, message):
+    count = await db.total_users_count()
+    await message.reply_text(f"📊 <b>ᴛᴏᴛᴀʟ ᴍᴇᴍʙᴇʀꜱ:</b> <code>{count}</code>")
 
+# --- BROADCAST COMMAND ---
 @Client.on_message(filters.command("broadcast") & filters.user(ADMINS))
-async def broadcast_cmd(client, message):
+async def broadcast_handler(client, message):
     if not message.reply_to_message:
-        return await message.reply_text("❌ Reply to a message to broadcast.")
-    await message.reply_text("🚀 <b>Broadcast Started...</b>")
+        return await message.reply_text("<b>❌ ᴘʟᴇᴀꜱᴇ ʀᴇᴘʟʏ ᴛᴏ ᴀ ᴍᴇꜱꜱᴀɢᴇ ᴛᴏ ʙʀᴏᴀᴅᴄᴀꜱᴛ!!</b>")
+    
+    broadcast_msg = message.reply_to_message
+    status_msg = await message.reply_text("🚀 <b>ʙʀᴏᴀᴅᴄᴀꜱᴛ ꜱᴛᴀʀᴛᴇᴅ...</b>")
+    
+    users = await db.get_all_users()
+    success = 0
+    failed = 0
+    
+    async for user in users:
+        try:
+            await broadcast_msg.copy(chat_id=user["_id"])
+            success += 1
+            await asyncio.sleep(0.1) 
+        except (UserIsBlocked, InputUserDeactivated):
+            failed += 1
+        except FloodWait as e:
+            await asyncio.sleep(e.value)
+            await broadcast_msg.copy(chat_id=user["_id"])
+            success += 1
+        except Exception:
+            failed += 1
+
+    await status_msg.edit_text(
+        f"✅ <b>ʙʀᴏᴀᴅᴄᴀꜱᴛ ᴄᴏᴍᴘʟᴇᴛᴇᴅ!!</b>\n\n"
+        f"👤 <b>ᴛᴏᴛᴀʟ ᴜꜱᴇʀꜱ:</b> <code>{success + failed}</code>\n"
+        f"🎉 <b>ꜱᴜᴄᴄᴇꜱꜱ:</b> <code>{success}</code>\n"
+        f"❌ <b>ꜰᴀɪʟᴇᴅ:</b> <code>{failed}</code>"
+    )
     
