@@ -1,7 +1,7 @@
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 class Buttons:
-    # row 1: [About, Help] | row 2: [Developer]
+    # Main Start Menu Buttons
     START_BUTTONS = InlineKeyboardMarkup([
         [
             InlineKeyboardButton("ᴀʙᴏᴜᴛ", callback_data="about"),
@@ -12,7 +12,7 @@ class Buttons:
         ]
     ])
 
-    # NEW: This fixes the 'no attribute file_links' error
+    # Side-by-Side Download/Bot Buttons (Emojis Removed)
     @staticmethod
     def file_links(download_link, bot_link):
         return InlineKeyboardMarkup([
@@ -22,14 +22,14 @@ class Buttons:
             ]
         ])
 
-    # Side-by-Side: [Back, Close]
+    # Side-by-Side Back and Close (Emojis Removed)
     BACK_CLOSE_BUTTONS = InlineKeyboardMarkup([
         [
             InlineKeyboardButton("ᴏᴡɴᴇʀ", url="https://t.me/Mahabul201")
         ],
         [
             InlineKeyboardButton("ʙᴀᴄᴋ", callback_data="back_to_start"),
-            InlineKeyboardButton("❌ Close", callback_data="close")
+            InlineKeyboardButton("ᴄʟᴏꜱᴇ", callback_data="close")
         ]
     ])
     
