@@ -9,8 +9,8 @@ def make_channel_buttons(file_id):
     bot_link    = f"https://t.me/{BOT_USERNAME}?start=file_{file_id}"
     stream_link = f"https://{clean_host}/dl/{file_id}"
     return InlineKeyboardMarkup([
-        [InlineKeyboardButton("🚀 ғᴀsᴛ ᴅᴏᴡɴʟᴏᴀᴅ", url=stream_link)],
-        [InlineKeyboardButton("🤖 ɢᴇᴛ ᴠɪᴀ ʙᴏᴛ",   url=bot_link)],
+        [InlineKeyboardButton("ᴅᴏᴡɴʟᴏᴀᴅ", url=stream_link)],
+        [InlineKeyboardButton("ʙᴏᴛ",   url=bot_link)],
     ])
 
 
