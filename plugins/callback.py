@@ -7,14 +7,13 @@ async def cb_handler(client: Client, query: CallbackQuery):
     data = query.data
 
     if data == "about":
-        # Updated to match the "About" style in your screenshot
         about_text = (
-            "▶ <b>MY NAME :</b> SHORTLINK BOT\n"
-            "▶ <b>LIBRARY :</b> PYROGRAM\n"
-            "▶ <b>DATABASE :</b> MONGODB\n"
-            "▶ <b>LANGUAGE :</b> PYTHON 3\n"
-            "▶ <b>BOT SERVER :</b> KOYEB\n"
-            "▶ <b>CREATED BY :</b> Moon"
+            "▶ <b>ᴍʏ ɴᴀᴍᴇ :</b> ғɪʟᴇ ᴛᴏ ʟɪɴᴋ ʙᴏᴛ\n"
+            "▶ <b>ʟɪʙʀᴀʀʏ :</b> ᴘʏʀᴏɢʀᴀᴍ\n"
+            "▶ <b>ᴅᴀᴛᴀʙᴀꜱᴇ :</b> ᴍᴏɴɢᴏᴅʙ\n"
+            "▶ <b>ʟᴀɴɢᴜᴀɢᴇ :</b> ᴘʏᴛʜᴏɴ 3\n"
+            "▶ <b>ʙᴏᴛ ꜱᴇʀᴠᴇʀ :</b> ᴋᴏʏᴇʙ\n"
+            "▶ <b>ᴄʀᴇᴀᴛᴇᴅ ʙʏ :</b> ᴍᴏᴏɴ"
         )
         await query.message.edit_caption(
             caption=about_text,
@@ -22,13 +21,12 @@ async def cb_handler(client: Client, query: CallbackQuery):
         )
 
     elif data == "help":
-        # Modified Help Menu
         help_text = (
-            "<b>💡 How to Use Me?</b>\n\n"
-            "1️⃣ Add me to your channel or send a file here.\n"
-            "2️⃣ I will provide a high-speed download link.\n"
-            "3️⃣ Use the 'Bot' button to share the link with others!\n\n"
-            "<i>Everything is automated and instant.</i>"
+            "<b>💡 ʜᴏᴡ ᴛᴏ ᴜꜱᴇ ᴍᴇ?</b>\n\n"
+            "1️⃣ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ᴄʜᴀɴɴᴇʟ ᴏʀ ꜱᴇɴᴅ ᴀ ꜰɪʟᴇ ʜᴇʀᴇ.\n"
+            "2️⃣ ɪ ᴡɪʟʟ ᴘʀᴏᴠɪᴅᴇ ᴀ ʜɪɢʜ-ꜱᴘᴇᴇᴅ ᴅᴏᴡɴʟᴏᴀᴅ ʟɪɴᴋ.\n"
+            "3️⃣ ᴜꜱᴇ ᴛʜᴇ 'ʙᴏᴛ' ʙᴜᴛᴛᴏɴ ᴛᴏ ꜱʜᴀʀᴇ ʟɪɴᴋꜱ!\n\n"
+            "<i>ᴇᴠᴇʀʏᴛʜɪɴɢ ɪꜱ ᴀᴜᴛᴏᴍᴀᴛᴇᴅ ᴀɴᴅ ɪɴꜱᴛᴀɴᴛ.</i>"
         )
         await query.message.edit_caption(
             caption=help_text,
@@ -36,13 +34,11 @@ async def cb_handler(client: Client, query: CallbackQuery):
         )
 
     elif data == "back_to_start":
-        # Returns to the original Start Message
         start_caption = (
-            "👋 <b>Hey Moon!</b>\n\n"
-            "I can convert your files into high-speed direct links.\n\n"
-            "• Direct Download Link\n"
-            "• Fast Streaming Support\n\n"
-            "Just send any file now 👇"
+            "👋 <b>ʜᴇʏ!!</b>\n\n"
+            "ɪ'ᴍ ᴛᴇʟᴇɢʀᴀᴍ ꜰɪʟᴇꜱ ꜱᴛʀᴇᴀᴍɪɴɢ ʙᴏᴛ ᴀꜱ ᴡᴇʟʟ ᴅɪʀᴇᴄᴛ ʟɪɴᴋꜱ ɢᴇɴᴇʀᴀᴛᴏʀ!!\n\n"
+            "ᴊᴜꜱᴛ ꜱᴇɴᴅ ᴍᴇ ᴀɴʏ ꜰɪʟᴇ (ᴏʀ) ᴍᴇᴅɪᴀ ꜰʀᴏᴍ ᴛᴇʟᴇɢʀᴀᴍ!!\n\n"
+            "<b>ᴜꜱᴇ ʙᴜᴛᴛᴏɴꜱ ʙᴇʟᴏᴡ ᴛᴏ ᴋɴᴏᴡ ᴍᴏʀᴇ 👇</b>"
         )
         await query.message.edit_caption(
             caption=start_caption,
@@ -50,5 +46,5 @@ async def cb_handler(client: Client, query: CallbackQuery):
         )
 
     elif data == "close":
-        # Deletes the message completely
         await query.message.delete()
+        
