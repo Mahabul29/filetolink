@@ -1,11 +1,10 @@
 from pyrogram import Client, filters, enums
 from pyrogram.types import Message
 from config import LOG_CHANNEL, FQDN, BOT_USERNAME
-from plugins.utils.markup import Buttons # Importing from your new folder
+from plugins.utils.markup import Buttons
 
 def get_download_link(file_id):
     clean_host = FQDN.replace("https://", "").replace("http://", "").rstrip("/")
-    # This is the direct link that triggers the download
     download_link = f"https://{clean_host}/dl/{file_id}"
     bot_link = f"https://t.me/{BOT_USERNAME}?start=file_{file_id}"
     return download_link, bot_link
@@ -25,16 +24,16 @@ async def private_handler(client: Client, message: Message):
         file_size = getattr(media, "file_size", 0)
         size_mb = round(file_size / (1024 * 1024), 2)
 
-        # 4. Generate the side-by-side buttons
+        # 4. Generate markup
         markup = Buttons.file_links(download_link, bot_link)
 
-        # 5. Send Reply (Removed Stream Link mentions)
+        # 5. Send Reply (Links are outside code tags to keep them clickable)
         await message.reply_text(
             f"<b>✅ File Stored Successfully!</b>\n\n"
             f"📁 <b>Name:</b> <code>{file_name}</code>\n"
             f"📦 <b>Size:</b> <code>{size_mb} MB</code>\n\n"
-            f"🔗 <b>Download Link:</b>\n<code>{download_link}</code>\n\n"
-            f"🤖 <b>Bot Link:</b>\n<code>{bot_link}</code>",
+            f"🔗 <b>Download Link:</b>\n{download_link}\n\n"
+            f"🤖 <b>Bot Link:</b>\n{bot_link}",
             reply_markup=markup,
             parse_mode=enums.ParseMode.HTML,
             disable_web_page_preview=True
