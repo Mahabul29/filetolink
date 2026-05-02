@@ -1,7 +1,7 @@
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 class Buttons:
-    # Main Start Menu
+    # row 1: [About, Help] | row 2: [Developer]
     START_BUTTONS = InlineKeyboardMarkup([
         [
             InlineKeyboardButton("ᴀʙᴏᴜᴛ", callback_data="about"),
@@ -12,7 +12,7 @@ class Buttons:
         ]
     ])
 
-    # About/Help Menu (Back and Close side-by-side)
+    # row 1: [Owner] | row 2: [Back, Close]
     BACK_CLOSE_BUTTONS = InlineKeyboardMarkup([
         [
             InlineKeyboardButton("ᴏᴡɴᴇʀ", url="https://t.me/Mahabul201")
