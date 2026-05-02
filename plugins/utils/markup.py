@@ -1,14 +1,15 @@
+# plugins/utils/markup.py
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 class Buttons:
-    # ... (Keep START_BUTTONS and BACK_BUTTON the same)
-
-    @staticmethod
-    def file_links(download_link, bot_link):
-        return InlineKeyboardMarkup([
-            [
-                InlineKeyboardButton("ᴅᴏᴡɴʟᴏᴀᴅ", url=download_link),
-                InlineKeyboardButton("ʙᴏᴛ", url=bot_link)
-            ]
-        ])
-        
+    START_BUTTONS = InlineKeyboardMarkup([
+        [
+            # Ensure these strings are exactly "about" and "help"
+            InlineKeyboardButton("ᴀʙᴏᴜᴛ", callback_data="about"),
+            InlineKeyboardButton("ʜᴇʟᴘ", callback_data="help")
+        ],
+        [
+            InlineKeyboardButton("ᴅᴇᴠᴇʟᴏᴘᴇʀ", url="https://t.me/Mahabul201")
+        ]
+    ])
+    
