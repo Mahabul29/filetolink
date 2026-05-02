@@ -1,7 +1,7 @@
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 class Buttons:
-    # --- ABOUT AND HELP SIDE-BY-SIDE ---
+    # --- Side-by-Side Start Menu ---
     START_BUTTONS = InlineKeyboardMarkup([
         [
             InlineKeyboardButton("ᴀʙᴏᴜᴛ", callback_data="about"),
@@ -12,7 +12,7 @@ class Buttons:
         ]
     ])
 
-    # --- DOWNLOAD AND BOT SIDE-BY-SIDE ---
+    # --- Side-by-Side Download & Bot ---
     @staticmethod
     def file_links(download_link, bot_link):
         return InlineKeyboardMarkup([
