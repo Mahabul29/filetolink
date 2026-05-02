@@ -1,17 +1,22 @@
 import os
 
 # Core Bot Credentials
-API_ID = int(os.environ.get("API_ID", "12345")) # Replace with your API ID
-API_HASH = os.environ.get("API_HASH", "your_api_hash") 
-BOT_TOKEN = os.environ.get("BOT_TOKEN", "your_bot_token")
+API_ID = int(os.environ.get("API_ID", "23908124"))
+API_HASH = os.environ.get("API_HASH", "308a72a60a70c766b6e551cc02ee4163") 
+BOT_TOKEN = os.environ.get("BOT_TOKEN", "8756801277:AAGyHM1RrmjddYVJg8HI5vmf7ueJvwLbL3Y")
 
-# Combined Channel (LOG and BIN are the same)
-LOG_CHANNEL = int(os.environ.get("LOG_CHANNEL", "-1002485776908"))
+# Database (Add this so you can start saving users!)
+DATABASE_URI = os.environ.get("DATABASE_URI", "")
 
-# Admin List (Required for /users and /broadcast)
-ADMINS = [int(x) for x in os.environ.get("ADMINS", "12345678").split()]
+# Combined Channel
+LOG_CHANNEL = int(os.environ.get("LOG_CHANNEL", "-1003755011837"))
+
+# Map OWNER_ID to ADMINS
+# We take the OWNER_ID and put it in a list so the bot recognizes you
+OWNER_ID = int(os.environ.get("OWNER_ID", "8762699550"))
+ADMINS = [OWNER_ID] 
 
 # Connection Settings
 PORT = int(os.environ.get("PORT", "8080"))
-FQDN = os.environ.get("FQDN", "")
+FQDN = os.environ.get("FQDN", "systematic-kelsy-mahavayst-c729839e.koyeb.app")
 BOT_USERNAME = os.environ.get("BOT_USERNAME", "File_To_Link_2Robot")
