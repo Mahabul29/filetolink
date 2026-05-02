@@ -1,7 +1,7 @@
 import time
 from pyrogram import Client, filters, enums
 from pyrogram.types import Message
-from config import LOG_CHANNEL, ADMINS # Ensure ADMINS list is in config.py
+from config import LOG_CHANNEL, ADMINS 
 from plugins.utils.markup import Buttons
 
 @Client.on_message(filters.command("start") & filters.private)
@@ -9,11 +9,13 @@ async def start_cmd(client: Client, message: Message):
     user = message.from_user
     
     # 1. Log Channel Notification
-    await client.send_message(
-        LOG_CHANNEL,
-        f"👤 <b>New User:</b> {user.first_name}\n"
-        f"‣ <b>ID:</b> <code>{user.id}</code>"
-    )
+    try:
+        await client.send_message(
+            LOG_CHANNEL,
+            f"👤 <b>New User:</b> {user.first_name}\n‣ <b>ID:</b> <code>{user.id}</code>"
+        )
+    except:
+        pass
 
     # 2. File Retrieval Logic
     if len(message.command) > 1 and message.command[1].startswith("file_"):
@@ -48,8 +50,7 @@ async def ping_cmd(client, message):
 
 @Client.on_message(filters.command("users") & filters.user(ADMINS))
 async def users_cmd(client, message):
-    # This requires a database implementation to show real numbers
-    await message.reply_text("<b>👥 Total Members:</b> <code>Fetching from Database...</code>")
+    await message.reply_text("<b>👥 Total Members:</b> <code>Database integration needed</code>")
 
 @Client.on_message(filters.command("broadcast") & filters.user(ADMINS))
 async def broadcast_cmd(client, message):
