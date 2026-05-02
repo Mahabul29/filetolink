@@ -1,28 +1,23 @@
-import logging
-from pyrogram import Client, filters, enums
-from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
-
-logger = logging.getLogger(__name__)
-
-
 @Client.on_message(filters.command("help") & filters.private)
 async def help_cmd(client: Client, message: Message):
-    markup = InlineKeyboardMarkup([
-        [InlineKeyboardButton("Updates", url="https://t.me/JavaGoat")],
-        [InlineKeyboardButton("Developer", url="https://t.me/Mahabul29")]
-    ])
+    # This keeps your custom buttons side-by-side
+    from plugins.utils.markup import Buttons
+    
+    help_text = (
+        "📖 <b>ʜᴇʟᴘ ᴍᴇɴᴜ</b>\n\n"
+        "<b>ᴄᴏᴍᴍᴀɴᴅꜱ:</b>\n"
+        "• /start — ꜱᴛᴀʀᴛ ᴛʜᴇ ʙᴏᴛ\n"
+        "• /help — ꜱʜᴏᴡ ᴛʜɪꜱ ʜᴇʟᴘ ᴍᴇꜱꜱᴀɢᴇ\n\n"
+        "<b>ʜᴏᴡ ᴛᴏ ᴜꜱᴇ:</b>\n"
+        "1️⃣ ꜱᴇɴᴅ ᴀɴʏ ꜰɪʟᴇ, ᴠɪᴅᴇᴏ, ᴏʀ ᴀᴜᴅɪᴏ ᴛᴏ ᴍᴇ\n"
+        "2️⃣ ɪ'ʟʟ ɪɴꜱᴛᴀɴᴛʟʏ ɢɪᴠᴇ ʏᴏᴜ ᴀ ᴅɪʀᴇᴄᴛ ᴅᴏᴡɴʟᴏᴀᴅ ʟɪɴᴋ\n"
+        "3️⃣ ꜱʜᴀʀᴇ ᴛʜᴇ ʟɪɴᴋ ᴡɪᴛʜ ᴀɴʏᴏɴᴇ!\n\n"
+        "⚡ <i>ᴘᴏᴡᴇʀᴇᴅ ʙʏ ᴍᴏᴏɴ</i>"
+    )
 
     await message.reply_text(
-        "<b>📖 Help Menu</b>\n\n"
-        "<b>Commands:</b>\n"
-        "• /start — Start the bot\n"
-        "• /help — Show this help message\n\n"
-        "<b>How to use:</b>\n"
-        "1️⃣ Send any file, video, or audio to me\n"
-        "2️⃣ I'll instantly give you a direct download link\n"
-        "3️⃣ Share the link with anyone!\n\n"
-        "⚡ <i>Powered by JavaGoat Streaming</i>",
+        text=help_text,
         parse_mode=enums.ParseMode.HTML,
-        reply_markup=markup,
+        reply_markup=Buttons.BACK_CLOSE_BUTTONS, # Uses your side-by-side Back/Close buttons
         disable_web_page_preview=True
     )
