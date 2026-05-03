@@ -8,8 +8,10 @@ class Database:
         self.users = self.db["users"]
 
     async def add_user(self, user_id):
-        try: await self.users.insert_one({"_id": user_id})
-        except: pass
+        try:
+            await self.users.insert_one({"_id": user_id})
+        except:
+            pass 
 
     async def get_all_users(self):
         return self.users.find({})
