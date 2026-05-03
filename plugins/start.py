@@ -12,6 +12,23 @@ async def start_cmd(client: Client, message: Message):
     user = message.from_user
     await db.add_user(user.id)
     
+    # --- DEEP LINK LOGIC ---
+    if len(message.command) > 1:
+        data = message.command[1]
+        if data.startswith("file_"):
+            try:
+                file_id = int(data.split("_")[1])
+                await client.copy_message(
+                    chat_id=message.chat.id,
+                    from_chat_id=LOG_CHANNEL,
+                    message_id=file_id
+                )
+                return 
+            except Exception as e:
+                await message.reply_text(f"❌ ᴇʀʀᴏʀ: {e}")
+                return
+
+    # --- WELCOME MESSAGE ---
     caption = (
         f"👋 <b>ʜᴇʏ {user.first_name}!!</b>\n\n"
         "ɪ'ᴍ ᴛᴇʟᴇɢʀᴀᴍ ꜰɪʟᴇꜱ ꜱᴛʀᴇᴀᴍɪɴɢ ʙᴏᴛ ᴀꜱ ᴡᴇʟʟ ᴅɪʀᴇᴄᴛ ʟɪɴᴋꜱ ɢᴇɴᴇʀᴀᴛᴏʀ!!\n\n"
@@ -25,8 +42,6 @@ async def start_cmd(client: Client, message: Message):
         reply_markup=Buttons.START_BUTTONS
     )
 
-# --- ADMIN COMMANDS ---
-
 @Client.on_message(filters.command("users") & filters.user(ADMINS))
 async def users_cmd(client, message):
     count = await db.total_users_count()
@@ -37,38 +52,5 @@ async def broadcast_handler(client, message):
     if not message.reply_to_message:
         return await message.reply_text("<b>❌ ᴘʟᴇᴀꜱᴇ ʀᴇᴘʟʏ ᴛᴏ ᴀ ᴍᴇꜱꜱᴀɢᴇ ᴛᴏ ʙʀᴏᴀᴅᴄᴀꜱᴛ!!</b>")
     
-    broadcast_msg = message.reply_to_message
-    status_msg = await message.reply_text("🚀 <b>ʙʀᴏᴀᴅᴄᴀꜱᴛ ꜱᴛᴀʀᴛᴇᴅ...</b>")
-    
-    users = await db.get_all_users()
-    success = 0
-    failed = 0
-    
-    async for user in users:
-        try:
-            await broadcast_msg.copy(chat_id=user["_id"])
-            success += 1
-            await asyncio.sleep(0.1) # Prevent Flood
-        except (UserIsBlocked, InputUserDeactivated):
-            failed += 1
-        except FloodWait as e:
-            await asyncio.sleep(e.value)
-            await broadcast_msg.copy(chat_id=user["_id"])
-            success += 1
-        except Exception:
-            failed += 1
-
-    await status_msg.edit_text(
-        f"✅ <b>ʙʀᴏᴀᴅᴄᴀꜱᴛ ᴄᴏᴍᴘʟᴇᴛᴇᴅ!!</b>\n\n"
-        f"👤 <b>ᴛᴏᴛᴀʟ ᴜꜱᴇʀꜱ:</b> <code>{success + failed}</code>\n"
-        f"🎉 <b>ꜱᴜᴄᴄᴇꜱꜱ:</b> <code>{success}</code>\n"
-        f"❌ <b>ꜰᴀɪʟᴇᴅ:</b> <code>{failed}</code>"
-    )
-
-@Client.on_message(filters.command("ping") & filters.private)
-async def ping_cmd(client, message):
-    start = time.time()
-    msg = await message.reply_text("🚀")
-    end = time.time()
-    await msg.edit_text(f"🏓 <b>ᴘᴏɴɢ!!</b>\n<code>{round((end - start) * 1000)}ᴍꜱ</code>")
+    broadcast_msg
     
