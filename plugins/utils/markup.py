@@ -4,19 +4,10 @@ class Buttons:
     START_BUTTONS = InlineKeyboardMarkup([
         [
             InlineKeyboardButton("ᴀʙᴏᴜᴛ", callback_data="about"),
-            InlineKeyboardButton("ʜᴇʟᴘ", callback_data="help")
+            InlineKeyboardButton("ʜᴇʟᴘ", callback_data="help") # Must match cb_handler
         ],
         [InlineKeyboardButton("ᴅᴇᴠᴇʟᴏᴘᴇʀ", url="https://t.me/Mahabul201")]
     ])
-
-    @staticmethod
-    def file_links(download_link, bot_link):
-        return InlineKeyboardMarkup([
-            [
-                InlineKeyboardButton("ᴅᴏᴡɴʟᴏᴀᴅ", url=download_link),
-                InlineKeyboardButton("ʙᴏᴛ", url=bot_link)
-            ]
-        ])
 
     BACK_CLOSE_BUTTONS = InlineKeyboardMarkup([
         [
@@ -25,3 +16,10 @@ class Buttons:
         ]
     ])
     
+    @staticmethod
+    def file_links(dl, bot):
+        return InlineKeyboardMarkup([[
+            InlineKeyboardButton("ᴅᴏᴡɴʟᴏᴀᴅ", url=dl),
+            InlineKeyboardButton("ʙᴏᴛ", url=bot)
+        ]])
+        
