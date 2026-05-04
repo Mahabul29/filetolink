@@ -1,32 +1,19 @@
-import asyncio
 import os
 from flask import Flask
 from threading import Thread
-from bot import Bot
 
-# Tiny server to stop Render from killing the bot
-app = Flask(__name__)
+app = Flask('')
+
 @app.route('/')
 def home():
-    return "Bot is Alive"
+    return "Bot is alive!"
 
-def run_web_server():
-    port = int(os.environ.get("PORT", 8080))
-    app.run(host='0.0.0.0', port=port)
+def run():
+  # Render uses port 10000 or 8080 usually
+  port = int(os.environ.get("PORT", 8080))
+  app.run(host='0.0.0.0', port=port)
 
-async def start_bot():
-    # Start the "keep-alive" server
-    Thread(target=run_web_server, daemon=True).start()
+def keep_alive():
+    t = Thread(target=run)
+    t.start()
     
-    # Properly start the Pyrogram bot
-    print("Starting Bot...")
-    bot_instance = Bot()
-    await bot_instance.start()
-    await asyncio.Event().wait()
-
-if __name__ == "__main__":
-    try:
-        asyncio.run(start_bot())
-    except KeyboardInterrupt:
-        pass
-        
