@@ -2,29 +2,26 @@ import asyncio
 import os
 from flask import Flask
 from threading import Thread
-from bot import Bot # Ensure this matches your file structure
+from bot import Bot
 
-# Web Server for Render Health Check
+# Tiny server to stop Render from killing the bot
 app = Flask(__name__)
-
 @app.route('/')
 def home():
-    return "Bot is Running"
+    return "Bot is Alive"
 
 def run_web_server():
     port = int(os.environ.get("PORT", 8080))
     app.run(host='0.0.0.0', port=port)
 
 async def start_bot():
-    # Start the web server in the background
+    # Start the "keep-alive" server
     Thread(target=run_web_server, daemon=True).start()
     
-    # Start the Bot
-    print("Starting Bot Instance...")
+    # Properly start the Pyrogram bot
+    print("Starting Bot...")
     bot_instance = Bot()
     await bot_instance.start()
-    
-    # Keep the process alive
     await asyncio.Event().wait()
 
 if __name__ == "__main__":
