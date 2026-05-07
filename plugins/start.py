@@ -1,3 +1,5 @@
+import os
+import sys
 import time
 from pyrogram import Client, filters
 from plugins.utils.markup import Buttons
@@ -57,4 +59,13 @@ async def ping_cmd(client, message):
     start = time.time()
     msg = await message.reply_text("🚀")
     await msg.edit_text(f"🏓 <b>ᴘᴏɴɢ!!</b>\n<code>{round((time.time() - start) * 1000)}ᴍꜱ</code>")
+
+@Client.on_message(filters.command("restart") & filters.user(ADMINS))
+async def restart_cmd(client, message):
+    """Restart the bot process"""
+    msg = await message.reply_text("🔄 **ᴘʀᴏᴄᴇꜱꜱɪɴɢ...**")
+    await msg.edit_text("✅ **ʙᴏᴛ ɪꜱ ʀᴇꜱᴛᴀʀᴛɪɴɢ...**\n*ᴘʟᴇᴀꜱᴇ ᴡᴀɪᴛ ᴀ ꜰᴇᴡ ꜱᴇᴄᴏɴᴅꜱ.*")
+    
+    # This replaces the current running process with a fresh one
+    os.execl(sys.executable, sys.executable, *sys.argv)
     
