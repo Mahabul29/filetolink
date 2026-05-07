@@ -1,4 +1,4 @@
-    import os
+import os
 import sys
 import time
 import asyncio
@@ -19,8 +19,10 @@ START_TEXT = (
 
 @Client.on_message(filters.command("start") & filters.private)
 async def start_cmd(client, message):
+    # Add user to database
     await db.add_user(message.from_user.id)
     
+    # Handle Deep Links
     if len(message.command) > 1 and message.command[1].startswith("file_"):
         try:
             file_id = int(message.command[1].split("_")[1])
@@ -66,6 +68,7 @@ async def users_cmd(client, message):
 
 @Client.on_message(filters.command("restart") & filters.user(ADMINS))
 async def restart_cmd(client, message):
+    """Restarts the bot process"""
     msg = await message.reply_text("🔄 **ᴘʀᴏᴄᴇꜱꜱɪɴɢ...**")
     await msg.edit_text("✅ **ʙᴏᴛ ɪꜱ ʀᴇꜱᴛᴀʀᴛɪɴɢ...**\n*ᴘʟᴇᴀꜱᴇ ᴡᴀɪᴛ ᴀ ꜰᴇᴡ ꜱᴇᴄᴏɴᴅꜱ.*")
     os.execl(sys.executable, sys.executable, *sys.argv)
@@ -84,8 +87,8 @@ async def broadcast_cmd(client, message):
 
     async for user in all_users:
         try:
-            # Assuming 'user' is a dict with an 'id' key or just the ID itself
-            user_id = user['id'] if isinstance(user, dict) else user
+            # Using ['_id'] to match your database.py logic
+            user_id = user['_id'] 
             await broadcast_msg.copy(chat_id=int(user_id))
             success += 1
         except FloodWait as e:
@@ -97,7 +100,16 @@ async def broadcast_cmd(client, message):
         
         done += 1
         if done % 20 == 0:
-            await sts_msg.edit(f"📣 **ʙʀᴏᴀᴅᴄᴀꜱᴛ ɪɴ ᴘʀᴏɢʀᴇꜱꜱ:**\n\n👤 **ᴛᴏᴛᴀʟ:** `{total}`\n✅ **ꜱᴜᴄᴄᴇꜱ:** `{success}`\n❌ **ꜰᴀɪʟᴇᴅ:** `{failed}`")
+            await sts_msg.edit(
+                f"📣 **ʙʀᴏᴀᴅᴄᴀꜱᴛ ɪɴ ᴘʀᴏɢʀᴇꜱꜱ:**\n\n"
+                f"👤 **ᴛᴏᴛᴀʟ:** `{total}`\n"
+                f"✅ **ꜱᴜᴄᴄᴇꜱꜱ:** `{success}`\n"
+                f"❌ **ꜰᴀɪʟᴇᴅ:** `{failed}`"
+            )
 
-    await sts_msg.edit(f"📢 **ʙʀᴏᴀᴅᴄᴀꜱᴛ ᴄᴏᴍᴘʟᴇᴛᴇᴅ!!**\n\n✅ **ꜱᴜᴄᴄᴇꜱꜱ:** `{success}`\n❌ **ꜰᴀɪʟᴇᴅ:** `{failed}`")
+    await sts_msg.edit(
+        f"📢 **ʙʀᴏᴀᴅᴄᴀꜱᴛ ᴄᴏᴍᴘʟᴇᴛᴇᴅ!!**\n\n"
+        f"✅ **ꜱᴜᴄᴄᴇꜱꜱ:** `{success}`\n"
+        f"❌ **ꜰᴀɪʟᴇᴅ:** `{failed}`"
+    )
     
