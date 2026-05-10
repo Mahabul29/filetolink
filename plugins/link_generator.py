@@ -19,19 +19,19 @@ async def link_generator_handler(client, message):
         file_name = getattr(media, "file_name", "Unknown")
         size_mb = round(getattr(media, "file_size", 0) / (1024 * 1024), 2)
 
-        # Exact layout and font styling to match the image
+        # Text using the updated fonts (Small Caps for labels, Typewriter for actions)
         text = (
             "<b>𝗬𝗼𝘂𝗿 𝗟𝗶𝗻𝗸 𝗚𝗲𝗻𝗲𝗿𝗮𝘁𝗲𝗱 ♥︎</b>\n\n"
             f"<b>ғɪʟᴇ ɴᴀᴍᴇ:</b> <code>{file_name}</code>\n"
             f"<b>ғɪʟᴇ sɪᴢᴇ:</b> <code>{size_mb} MB</code>\n\n"
-            f"<b>𝙳𝚘𝚠𝚗𝚕𝚘𝚍:</b>\n<code>{download_link}</code>\n\n"
+            f"<b>𝙳𝚘𝚠𝚗𝚕𝚘𝚊𝚍:</b>\n<code>{download_link}</code>\n\n"
             f"<b>𝚂𝚝𝚛𝚎𝚊𝚖:</b>\n<code>{stream_link}</code>"
         )
 
-        # Side-by-side buttons with arrows
+        # Buttons using Typewriter font and arrow icon
         keyboard = InlineKeyboardMarkup([
             [
-                InlineKeyboardButton("𝙳𝚘𝚠𝚗𝚕𝚘𝚍 ↗", url=download_link),
+                InlineKeyboardButton("𝙳𝚘𝚠𝚗𝚕𝚘𝚊𝚍 ↗", url=download_link),
                 InlineKeyboardButton("𝚂𝚝𝚛𝚎𝚊𝚖 ↗", url=stream_link)
             ]
         ])
@@ -44,4 +44,3 @@ async def link_generator_handler(client, message):
 
     except Exception as e:
         await msg.edit_text(f"Error: <code>{str(e)}</code>")
-        
