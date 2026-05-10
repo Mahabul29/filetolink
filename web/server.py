@@ -3,23 +3,24 @@ from aiohttp import web
 from config import PORT
 from web.stream import video_player, stream_handler
 
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 async def home(request):
-    return web.Response(text="Bot is running ✅")
+    return web.Response(text="✅ Bot is Running!")
 
 async def web_server(bot_client):
-    app = web.Application()
+    app = web.Application(client_max_size=30 * 1024 * 1024)
     app["bot_client"] = bot_client
-    
-    # Corrected routes with single braces
+
     app.router.add_get("/", home)
     app.router.add_get("/watch/{file_id}", video_player)
     app.router.add_get("/dl/{file_id}", stream_handler)
+    app.router.add_get("/stream/{file_id}", stream_handler)  # legacy support
 
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, "0.0.0.0", int(PORT))
     await site.start()
+    logger.info(f"✅ Web server started on port {PORT}")
     return runner
-    
