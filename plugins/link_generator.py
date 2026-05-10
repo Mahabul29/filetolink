@@ -5,7 +5,7 @@ from config import BIN_CHANNEL, FQDN
 @Client.on_message(filters.private & (filters.document | filters.video | filters.audio))
 async def link_generator_handler(client, message):
     try:
-        # Store file
+        # Store file in BIN_CHANNEL
         copied_msg = await message.copy(chat_id=BIN_CHANNEL)
         
         # Setup Links
@@ -16,7 +16,7 @@ async def link_generator_handler(client, message):
         file_name = getattr(media, "file_name", "Unknown")
         size_mb = round(getattr(media, "file_size", 0) / (1024 * 1024), 2)
 
-        # Your EXACT text front and layout
+        # EXACT TEXT AND NO EMOJIS AS REQUESTED
         keyboard = InlineKeyboardMarkup([
             [
                 InlineKeyboardButton("DOWNLOAD", url=download_link),
