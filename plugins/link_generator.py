@@ -4,31 +4,33 @@ from config import BIN_CHANNEL, FQDN
 
 @Client.on_message(filters.private & (filters.document | filters.video | filters.audio))
 async def link_generator_handler(client, message):
-    msg = await message.reply_text("Processing...")
+    msg = await message.reply_text("<code>Processing...</code>")
     
     try:
-        # Forward/Copy message to the Bin Channel
+        # Clean the host URL
+        base_url = FQDN.replace("https://", "").replace("http://", "").strip("/")
+        
+        # Copy message to get the persistent ID
         copied_msg = await message.copy(chat_id=BIN_CHANNEL)
 
-        # Generate links
-        download_link = f"https://{FQDN}/dl/{copied_msg.id}"
-        stream_link = f"https://{FQDN}/watch/{copied_msg.id}"
+        # Final Link Construction
+        download_link = f"https://{base_url}/dl/{copied_msg.id}"
+        stream_link = f"https://{base_url}/watch/{copied_msg.id}"
 
-        # Get file metadata
+        # Metadata
         media = message.document or message.video or message.audio
         file_name = getattr(media, "file_name", "Unknown")
         size_mb = round(getattr(media, "file_size", 0) / (1024 * 1024), 2)
 
-        # Text using the updated fonts (Small Caps for labels, Typewriter for actions)
+        # UPDATED TEXT: Removed <code> from the link to make it "Openable"
         text = (
             "<b>𝗬𝗼𝘂𝗿 𝗟𝗶𝗻𝗸 𝗚𝗲𝗻𝗲𝗿𝗮𝘁𝗲𝗱 ♥︎</b>\n\n"
-            f"<b>ғɪʟᴇ ɴᴀᴍᴇ:</b> <code>{file_name}</code>\n"
+            f"<b>𝙵𝚒𝚕𝚎 𝙽𝚊𝚖𝚎:</b> <code>{file_name}</code>\n\n\n\n"
             f"<b>ғɪʟᴇ sɪᴢᴇ:</b> <code>{size_mb} MB</code>\n\n"
-            f"<b>𝙳𝚘𝚠𝚗𝚕𝚘𝚊𝚍:</b>\n<code>{download_link}</code>\n\n"
-            f"<b>𝚂𝚝𝚛𝚎𝚊𝚖:</b>\n<code>{stream_link}</code>"
+            f"<b>𝙳𝚘𝚠𝚗𝚕𝚘𝚊𝚍:</b>\n{download_link}" 
         )
 
-        # Buttons using Typewriter font and arrow icon
+        # Buttons stay the same
         keyboard = InlineKeyboardMarkup([
             [
                 InlineKeyboardButton("𝙳𝚘𝚠𝚗𝚕𝚘𝚊𝚍 ↗", url=download_link),
@@ -43,4 +45,5 @@ async def link_generator_handler(client, message):
         )
 
     except Exception as e:
-        await msg.edit_text(f"Error: <code>{str(e)}</code>")
+        await msg.edit_text(f"<b>Error:</b> <code>{str(e)}</code>")
+        
