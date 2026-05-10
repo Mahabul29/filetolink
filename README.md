@@ -1,6 +1,8 @@
 <p align="center">
-  <img src="https://www.uhdpaper.com/2023/07/genshin-impact-furina-game-4k-161m.html" alt="Bot Banner" width="100%">
+  <img src="https://www.uhdpaper.com/2023/07/genshin-impact-furina-game-4k-161m-original.jpg" alt="Bot Banner" width="100%">
 </p>
+
+# 🚀 File-to-Link Bot (Private Version)
 
 # 🚀 File-to-Link Bot (Private Version)
 
