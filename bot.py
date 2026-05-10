@@ -2,7 +2,6 @@ import os
 import asyncio
 from pyrogram import Client
 from aiohttp import web
-# Added BIN_CHANNEL to imports
 from config import API_ID, API_HASH, BOT_TOKEN, LOG_CHANNEL, BIN_CHANNEL, PORT, FQDN
 
 class Bot(Client):
@@ -19,19 +18,23 @@ class Bot(Client):
         await super().start()
         print("🤖 Bot session started!")
 
-        # --- FORCE PEER REFRESH ---
-        # We check BOTH channels to ensure the bot "sees" them on startup
-        for channel_id in [LOG_CHANNEL, BIN_CHANNEL]:
-            try:
-                chat = await self.get_chat(channel_id)
-                print(f"✅ Successfully linked to: {chat.title} ({channel_id})")
-                
-                # Optional: Send a startup heart-beat to Log Channel only
-                if channel_id == LOG_CHANNEL:
-                    await self.send_message(LOG_CHANNEL, "🚀 **Bot Restarted & Connected!**")
-            except Exception as e:
-                print(f"❌ Peer ID Error for {channel_id}: {e}")
-                print(f"💡 Fix: Make sure Bot is Admin in {channel_id} and send a text there.")
+        # --- THE AGGRESSIVE PEER FIX ---
+        print("🔄 Warming up session and fetching dialogs...")
+        try:
+            # Forces Pyrogram to cache the access hashes for all chats
+            async for dialog in self.get_dialogs(limit=20):
+                pass 
+            
+            for channel_id in [LOG_CHANNEL, BIN_CHANNEL]:
+                try:
+                    chat = await self.get_chat(channel_id)
+                    print(f"✅ Successfully linked to: {chat.title} ({channel_id})")
+                    if channel_id == LOG_CHANNEL:
+                        await self.send_message(LOG_CHANNEL, "🚀 **Bot Online: Peer Connection Verified.**")
+                except Exception as e:
+                    print(f"❌ Peer ID Error for {channel_id}: {e}")
+        except Exception as e:
+            print(f"⚠️ Dialog fetch failed: {e}")
 
         # --- WEB SERVER SETUP ---
         bot_ref = self
@@ -42,14 +45,14 @@ class Bot(Client):
         async def stream_file(request):
             try:
                 file_id = int(request.match_info["file_id"])
-                # IMPORTANT: Files are now in BIN_CHANNEL, not LOG_CHANNEL
+                # Look in BIN_CHANNEL for the stored media
                 msg = await bot_ref.get_messages(BIN_CHANNEL, file_id)
                 
                 if not msg or not msg.media:
-                    return web.Response(status=404, text="File not found in Bin")
+                    return web.Response(status=404, text="File not found")
 
                 media = msg.document or msg.video or msg.audio
-                file_name = getattr(media, "file_name", "file") or "file"
+                file_name = getattr(media, "file_name", "file")
                 mime = getattr(media, "mime_type", "application/octet-stream")
 
                 headers = {
@@ -64,7 +67,6 @@ class Bot(Client):
 
                 await response.write_eof()
                 return response
-
             except Exception as e:
                 return web.Response(status=500, text=str(e))
 
@@ -74,16 +76,12 @@ class Bot(Client):
 
         runner = web.AppRunner(app)
         await runner.setup()
-        
-        # Site starts on the PORT provided by Koyeb (usually 8080)
         site = web.TCPSite(runner, "0.0.0.0", PORT)
         await site.start() 
         
         print(f"🚀 Health Check & Stream live on port {PORT}")
-        print(f"🌐 Stream URL: https://{FQDN}/dl/")
-        print("✅ Bot is fully online!")
+        print(f"🌐 URL: https://{FQDN}")
 
     async def stop(self, *args):
         await super().stop()
-        print("🛑 Bot Stopped.")
         
