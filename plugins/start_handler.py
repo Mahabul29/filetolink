@@ -3,25 +3,23 @@ from config import BIN_CHANNEL
 
 @Client.on_message(filters.command("start") & filters.private)
 async def start_handler(client, message):
-    # This checks if the link clicked was like /start file_865
     if len(message.command) > 1 and message.command[1].startswith("file_"):
         try:
-            # 1. Extract the message ID from the command
             file_id = int(message.command[1].split("_")[1])
             
-            # 2. Get that exact message from your Storage Channel
-            msg = await client.get_messages(BIN_CHANNEL, file_id)
-            
-            if msg and msg.media:
-                # 3. Use 'copy' to send the EXACT same file to the user
-                await msg.copy(chat_id=message.chat.id)
-            else:
-                await message.reply_text("❌ ꜰɪʟᴇ ɴᴏᴛ ꜰᴏᴜɴᴅ ɪɴ ꜱᴛᴏʀᴀɢᴇ.")
-                
+            # Use 'copy' which is faster and keeps the peer connection alive
+            await client.copy_message(
+                chat_id=message.chat.id,
+                from_chat_id=BIN_CHANNEL,
+                message_id=file_id
+            )
         except Exception as e:
-            print(f"Start Handler Error: {e}")
-            await message.reply_text("❌ ᴇʀʀᴏʀ: ᴄᴏᴜʟᴅ ɴᴏᴛ ʀᴇᴛʀɪᴇᴠᴇ ꜰɪʟᴇ.")
+            # If it fails, try one more time by fetching the message first
+            try:
+                msg = await client.get_messages(BIN_CHANNEL, file_id)
+                await msg.copy(message.chat.id)
+            except:
+                await message.reply_text("❌ ꜰɪʟᴇ ɴᴏᴛ ꜰᴏᴜɴᴅ. ᴘʟᴇᴀꜱᴇ ᴛʀʏ ᴀɢᴀɪɴ ɪɴ ᴀ ᴍᴏᴍᴇɴᴛ.")
     else:
-        # Standard welcome message for users who just send /start
-        await message.reply_text("👋 ꜱᴇɴᴅ ᴍᴇ ᴀ ꜰɪʟᴇ ᴛᴏ ɢᴇᴛ ʏᴏᴜʀ ʟɪɴᴋꜱ!")
-      
+        await message.reply_text("👋 Welcome! Send me a file to get started.")
+        
