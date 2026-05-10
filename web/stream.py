@@ -38,17 +38,17 @@ async def stream_handler(request):
         mime_type = getattr(media, "mime_type", "application/octet-stream")
         file_size = getattr(media, "file_size", 0)
 
-        response = web.StreamResponse(headers={{
+        response = web.StreamResponse(headers={
             "Content-Type": mime_type,
-            "Content-Disposition": f'attachment; filename="{{file_name}}"',
+            "Content-Disposition": f'attachment; filename="{file_name}"',
             "Content-Length": str(file_size),
-        }})
+        })
         await response.prepare(request)
         async for chunk in bot_client.stream_media(msg):
             await response.write(chunk)
         await response.write_eof()
         return response
     except Exception as e:
-        logger.error(f"Stream error: {{e}}")
+        logger.error(f"Stream error: {e}")
         return web.Response(text="Error occurred", status=500)
         
