@@ -31,6 +31,7 @@ async def video_player(request):
         playable_note = "" if can_play else "<p class='warn'>⚠️ This format may not play in browser. Use VLC / MX Player below.</p>"
 
     except Exception as e:
+        logger.error(f"File info error: {e}")
         file_name = "Unknown"
         mime_type = "unknown"
         size_mb = 0
@@ -39,13 +40,24 @@ async def video_player(request):
         can_play = False
         playable_note = "<p class='warn'>⚠️ Could not fetch file info.</p>"
 
-    stream_url = f"https://{FQDN}/stream/{file_id}"
-    download_url = f"https://{FQDN}/dl/{file_id}"
+    # Clean FQDN - remove any protocol prefix or trailing slash
+    clean_fqdn = FQDN.replace("https://", "").replace("http://", "").rstrip("/")
 
-    # External player deep links
-    vlc_url = f"vlc://{stream_url}"
-    mx_url = f"intent:{stream_url}#Intent;package=com.mxtech.videoplayer.ad;end"
-    sp_url = f"intent:{stream_url}#Intent;package=com.splayer.splayer;end"
+    stream_url   = f"https://{clean_fqdn}/stream/{file_id}"
+    download_url = f"https://{clean_fqdn}/dl/{file_id}"
+
+    # Correct Android intent deep links
+    vlc_url = f"intent:{stream_url}#Intent;package=org.videolan.vlc;action=android.intent.action.VIEW;type=video/mp4;end"
+    mx_url  = f"intent:{stream_url}#Intent;package=com.mxtech.videoplayer.ad;action=android.intent.action.VIEW;type=video/mp4;end"
+    sp_url  = f"intent:{stream_url}#Intent;package=com.sp.apps.splayer;action=android.intent.action.VIEW;type=video/mp4;end"
+
+    # Video or audio player tag
+    if "video" in mime_type:
+        player_tag = f'<video controls autoplay playsinline><source src="{stream_url}" type="video/mp4">Your browser does not support this video.</video>'
+    elif "audio" in mime_type:
+        player_tag = f'<audio controls autoplay><source src="{stream_url}">Your browser does not support audio.</audio>'
+    else:
+        player_tag = ""
 
     html_content = f"""<!DOCTYPE html>
 <html>
@@ -53,7 +65,11 @@ async def video_player(request):
     <title>{file_name}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
         body {{
             background: #0b1521;
             color: white;
@@ -64,7 +80,6 @@ async def video_player(request):
             padding: 20px 15px 40px;
             min-height: 100vh;
         }}
-
         .title {{
             color: #2481cc;
             font-size: 18px;
@@ -72,8 +87,10 @@ async def video_player(request):
             margin-bottom: 15px;
             text-align: center;
             line-height: 1.4;
+            word-break: break-word;
+            max-width: 850px;
+            width: 100%;
         }}
-
         .info-box {{
             background: #112033;
             border: 1px solid #2481cc44;
@@ -86,21 +103,26 @@ async def video_player(request):
         .info-row {{
             display: flex;
             justify-content: space-between;
-            padding: 7px 0;
+            align-items: center;
+            padding: 8px 0;
             border-bottom: 1px solid #1e3a55;
             font-size: 13px;
+            gap: 10px;
         }}
-        .info-row:last-child {{ border-bottom: none; }}
-        .info-label {{ color: #7fb3d3; }}
+        .info-row:last-child {{
+            border-bottom: none;
+        }}
+        .info-label {{
+            color: #7fb3d3;
+            white-space: nowrap;
+        }}
         .info-value {{
             color: #fff;
             font-weight: 500;
             word-break: break-all;
             text-align: right;
-            max-width: 60%;
         }}
-
-        video, audio {{
+        video {{
             width: 100%;
             max-width: 850px;
             border-radius: 10px;
@@ -108,7 +130,11 @@ async def video_player(request):
             background: #000;
             margin-bottom: 15px;
         }}
-
+        audio {{
+            width: 100%;
+            max-width: 850px;
+            margin-bottom: 15px;
+        }}
         .warn {{
             color: #f39c12;
             background: #1a1200;
@@ -121,8 +147,6 @@ async def video_player(request):
             max-width: 850px;
             text-align: center;
         }}
-
-        /* TOP BUTTONS: Download + Copy */
         .top-buttons {{
             display: flex;
             gap: 10px;
@@ -142,13 +166,20 @@ async def video_player(request):
             transition: opacity 0.2s;
             cursor: pointer;
             border: none;
+            display: inline-block;
         }}
-        .btn:hover {{ opacity: 0.85; }}
-        .btn-download {{ background: #27ae60; }}
-        .btn-copy {{ background: #2481cc; }}
-        .copied {{ background: #1a6aaa !important; }}
-
-        /* PLAYER SECTION */
+        .btn:hover {{
+            opacity: 0.85;
+        }}
+        .btn-download {{
+            background: #27ae60;
+        }}
+        .btn-copy {{
+            background: #2481cc;
+        }}
+        .copied {{
+            background: #1a6aaa !important;
+        }}
         .player-section {{
             width: 100%;
             max-width: 850px;
@@ -160,9 +191,11 @@ async def video_player(request):
         .player-title {{
             color: #7fb3d3;
             font-size: 13px;
-            margin-bottom: 12px;
+            font-weight: 600;
+            margin-bottom: 14px;
             text-align: center;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
         }}
         .player-buttons {{
             display: flex;
@@ -174,32 +207,42 @@ async def video_player(request):
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 6px;
-            padding: 14px 20px;
-            border-radius: 12px;
+            justify-content: center;
+            gap: 8px;
+            padding: 16px 10px;
+            border-radius: 14px;
             text-decoration: none;
             font-size: 13px;
             font-weight: bold;
             color: white;
             flex: 1;
             min-width: 90px;
-            transition: opacity 0.2s, transform 0.1s;
+            max-width: 150px;
+            transition: opacity 0.2s, transform 0.15s;
         }}
         .player-btn:hover {{
             opacity: 0.85;
-            transform: scale(1.03);
+            transform: scale(1.04);
         }}
-        .player-btn .icon {{ font-size: 28px; }}
-        .btn-vlc {{ background: linear-gradient(135deg, #ff7700, #cc5500); }}
-        .btn-mx  {{ background: linear-gradient(135deg, #1a73e8, #0d47a1); }}
-        .btn-sp  {{ background: linear-gradient(135deg, #9c27b0, #6a0080); }}
+        .player-btn .icon {{
+            font-size: 30px;
+        }}
+        .btn-vlc {{
+            background: linear-gradient(135deg, #ff7700, #cc5500);
+        }}
+        .btn-mx {{
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+        }}
+        .btn-sp {{
+            background: linear-gradient(135deg, #9c27b0, #6a0080);
+        }}
     </style>
 </head>
 <body>
 
     <div class="title">{icon} {file_name}</div>
 
-    <!-- File Info -->
+    <!-- File Info Box -->
     <div class="info-box">
         <div class="info-row">
             <span class="info-label">📄 File Name</span>
@@ -219,12 +262,13 @@ async def video_player(request):
         </div>
     </div>
 
+    <!-- Warning if not browser-playable -->
     {playable_note}
 
-    <!-- Browser Video Player -->
-    {'<video controls autoplay playsinline><source src="' + stream_url + '" type="video/mp4">Your browser does not support this video.</video>' if "video" in mime_type else '<audio controls autoplay><source src="' + stream_url + '">Your browser does not support audio.</audio>' if "audio" in mime_type else ''}
+    <!-- Browser Player -->
+    {player_tag}
 
-    <!-- Download + Copy -->
+    <!-- Download + Copy Buttons -->
     <div class="top-buttons">
         <a href="{download_url}" class="btn btn-download">⬇ Download</a>
         <button class="btn btn-copy" onclick="copyLink()">🔗 Copy Link</button>
@@ -232,7 +276,7 @@ async def video_player(request):
 
     <!-- External Players -->
     <div class="player-section">
-        <div class="player-title">▶ OPEN WITH EXTERNAL PLAYER</div>
+        <div class="player-title">▶ Open With External Player</div>
         <div class="player-buttons">
             <a href="{vlc_url}" class="player-btn btn-vlc">
                 <span class="icon">🟠</span>
@@ -251,14 +295,30 @@ async def video_player(request):
 
     <script>
         function copyLink() {{
-            navigator.clipboard.writeText("{download_url}");
-            const btn = document.querySelector('.btn-copy');
-            btn.textContent = '✅ Copied!';
-            btn.classList.add('copied');
-            setTimeout(() => {{
-                btn.textContent = '🔗 Copy Link';
-                btn.classList.remove('copied');
-            }}, 2000);
+            navigator.clipboard.writeText("{download_url}").then(() => {{
+                const btn = document.querySelector('.btn-copy');
+                btn.textContent = '✅ Copied!';
+                btn.classList.add('copied');
+                setTimeout(() => {{
+                    btn.textContent = '🔗 Copy Link';
+                    btn.classList.remove('copied');
+                }}, 2000);
+            }}).catch(() => {{
+                // Fallback for older browsers
+                const el = document.createElement('textarea');
+                el.value = "{download_url}";
+                document.body.appendChild(el);
+                el.select();
+                document.execCommand('copy');
+                document.body.removeChild(el);
+                const btn = document.querySelector('.btn-copy');
+                btn.textContent = '✅ Copied!';
+                btn.classList.add('copied');
+                setTimeout(() => {{
+                    btn.textContent = '🔗 Copy Link';
+                    btn.classList.remove('copied');
+                }}, 2000);
+            }});
         }}
     </script>
 
@@ -268,6 +328,7 @@ async def video_player(request):
 
 
 async def stream_handler(request):
+    """Raw stream endpoint — used by browser video tag and external players"""
     file_id = request.match_info.get('file_id')
     bot_client = request.app["bot_client"]
 
@@ -280,6 +341,7 @@ async def stream_handler(request):
 
         file_size = getattr(media, "file_size", 0)
 
+        # Handle Range requests for video seeking
         range_header = request.headers.get("Range")
         offset = 0
         end = file_size - 1
@@ -321,6 +383,7 @@ async def stream_handler(request):
 
 
 async def download_handler(request):
+    """Force download with real filename and mime type"""
     file_id = request.match_info.get('file_id')
     bot_client = request.app["bot_client"]
 
