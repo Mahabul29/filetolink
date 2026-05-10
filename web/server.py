@@ -6,10 +6,8 @@ from web.video_play import video_play, stream_handler, download_handler
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 async def home(request):
     return web.Response(text="✅ Bot is Running!")
-
 
 async def web_server(bot_client):
     app = web.Application(client_max_size=30 * 1024 * 1024)
