@@ -15,18 +15,15 @@ class Bot(Client):
 
     async def start(self):
         await super().start()
-        # FIX: Resolve Peer ID for the storage channel immediately to stop 404 errors
+        # Fix Peer ID invalid by fetching channel info on start
         try:
             await self.get_chat(BIN_CHANNEL)
-            print("✅ Storage Channel Connection Verified")
+            print("✅ Connection to Bin Channel Verified")
         except Exception as e:
-            print(f"❌ Peer Resolution Failed: {e}")
+            print(f"❌ Bin Channel Error: {{e}}")
 
-        # Start Web Server
         self.runner = await web_server(self)
 
     async def stop(self, *args):
         await super().stop()
-        if hasattr(self, "runner"):
-            await self.runner.cleanup()
-            
+        
