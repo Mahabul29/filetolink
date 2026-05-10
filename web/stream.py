@@ -5,6 +5,13 @@ from config import BIN_CHANNEL, FQDN
 logger = logging.getLogger(__name__)
 
 
+def _media_info(media):
+    file_name = getattr(media, "file_name", "Unknown File")
+    mime_type = getattr(media, "mime_type", "application/octet-stream") or "application/octet-stream"
+    file_size = getattr(media, "file_size", 0) or 0
+    return file_name, mime_type, file_size
+
+
 async def video_player(request):
     file_id = request.match_info.get("file_id")
     bot_client = request.app["bot_client"]
@@ -12,23 +19,38 @@ async def video_player(request):
     try:
         msg = await bot_client.get_messages(int(BIN_CHANNEL), int(file_id))
         media = msg.document or msg.video or msg.audio or msg.photo
-        file_name = getattr(media, "file_name", "Unknown File")
-        mime_type = getattr(media, "mime_type", "unknown")
-        file_size = getattr(media, "file_size", 0)
+        if not media:
+            return web.Response(text="❌ File not found", status=404)
+
+        file_name, mime_type, file_size = _media_info(media)
         size_mb = round(file_size / (1024 * 1024), 2)
+        ext = mime_type.split("/")[-1].lower()
 
         if "video" in mime_type:
             icon = "🎬"
             file_type = "Video"
+            player_tag = f'''
+            <video controls autoplay playsinline preload="metadata">
+                <source src="/stream/{file_id}" type="{mime_type}">
+                Your browser does not support this video.
+            </video>
+            '''
+            playable_note = ""
         elif "audio" in mime_type:
             icon = "🎵"
             file_type = "Audio"
+            player_tag = f'''
+            <audio controls autoplay preload="metadata">
+                <source src="/stream/{file_id}" type="{mime_type}">
+                Your browser does not support this audio.
+            </audio>
+            '''
+            playable_note = ""
         else:
             icon = "📁"
             file_type = "Document"
-
-        can_play = any(x in mime_type for x in ["mp4", "webm", "ogg", "audio"])
-        playable_note = "" if can_play else "<p class='warn'>⚠️ This format may not play in browser. Use an external player below.</p>"
+            player_tag = ""
+            playable_note = "<p class='warn'>⚠️ This file may not play in browser. You can download it below.</p>"
 
     except Exception as e:
         logger.error(f"File info error: {e}")
@@ -37,20 +59,11 @@ async def video_player(request):
         size_mb = 0
         icon = "📁"
         file_type = "File"
-        can_play = False
+        player_tag = ""
         playable_note = "<p class='warn'>⚠️ Could not fetch file info.</p>"
 
     clean_fqdn = FQDN.replace("https://", "").replace("http://", "").rstrip("/")
-    stream_url   = f"https://{clean_fqdn}/stream/{file_id}"
     download_url = f"https://{clean_fqdn}/dl/{file_id}"
-    play_base    = f"https://{clean_fqdn}/play"
-
-    if "video" in mime_type:
-        player_tag = f'<video controls autoplay playsinline><source src="{stream_url}" type="video/mp4">Your browser does not support this video.</video>'
-    elif "audio" in mime_type:
-        player_tag = f'<audio controls autoplay><source src="{stream_url}">Your browser does not support audio.</audio>'
-    else:
-        player_tag = ""
 
     html_content = f"""<!DOCTYPE html>
 <html>
@@ -106,18 +119,15 @@ async def video_player(request):
             word-break: break-all;
             text-align: right;
         }}
-        video {{
+        video, audio {{
             width: 100%;
             max-width: 850px;
             border-radius: 10px;
-            border: 2px solid #2481cc;
             background: #000;
             margin-bottom: 15px;
         }}
-        audio {{
-            width: 100%;
-            max-width: 850px;
-            margin-bottom: 15px;
+        video {{
+            border: 2px solid #2481cc;
         }}
         .warn {{
             color: #f39c12;
@@ -156,51 +166,6 @@ async def video_player(request):
         .btn-download {{ background: #27ae60; }}
         .btn-copy {{ background: #2481cc; }}
         .copied {{ background: #1a6aaa !important; }}
-        .player-section {{
-            width: 100%;
-            max-width: 850px;
-            background: #112033;
-            border: 1px solid #2481cc44;
-            border-radius: 14px;
-            padding: 16px;
-        }}
-        .player-title {{
-            color: #7fb3d3;
-            font-size: 13px;
-            font-weight: 600;
-            margin-bottom: 14px;
-            text-align: center;
-            letter-spacing: 0.8px;
-            text-transform: uppercase;
-        }}
-        .player-buttons {{
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }}
-        .player-btn {{
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            gap: 14px;
-            padding: 14px 18px;
-            border-radius: 12px;
-            font-size: 15px;
-            font-weight: bold;
-            color: white;
-            width: 100%;
-            transition: opacity 0.2s, transform 0.15s;
-            cursor: pointer;
-            border: none;
-            text-decoration: none;
-        }}
-        .player-btn:hover {{ opacity: 0.88; transform: scale(1.02); }}
-        .player-btn .icon {{ font-size: 26px; width: 36px; text-align: center; }}
-        .player-btn .label {{ flex: 1; }}
-        .player-btn .arrow {{ font-size: 16px; opacity: 0.6; }}
-        .btn-vlc {{ background: linear-gradient(135deg, #ff7700, #cc5500); }}
-        .btn-mx  {{ background: linear-gradient(135deg, #1a73e8, #0d47a1); }}
-        .btn-sp  {{ background: linear-gradient(135deg, #2ecc71, #1a8a47); }}
     </style>
 </head>
 <body>
@@ -232,27 +197,6 @@ async def video_player(request):
     <div class="top-buttons">
         <a href="{download_url}" class="btn btn-download">⬇ Download</a>
         <button class="btn btn-copy" onclick="copyLink()">🔗 Copy Link</button>
-    </div>
-
-    <div class="player-section">
-        <div class="player-title">▶ Open With External Player</div>
-        <div class="player-buttons">
-            <a href="{play_base}/vlc/{file_id}" class="player-btn btn-vlc">
-                <span class="icon">🟠</span>
-                <span class="label">VLC Player</span>
-                <span class="arrow">▶</span>
-            </a>
-            <a href="{play_base}/mx/{file_id}" class="player-btn btn-mx">
-                <span class="icon">🔵</span>
-                <span class="label">MX Player</span>
-                <span class="arrow">▶</span>
-            </a>
-            <a href="{play_base}/sp/{file_id}" class="player-btn btn-sp">
-                <span class="icon">🟢</span>
-                <span class="label">SPlayer</span>
-                <span class="arrow">▶</span>
-            </a>
-        </div>
     </div>
 
     <script>
@@ -289,49 +233,60 @@ async def video_player(request):
 
 
 async def stream_handler(request):
-    file_id = request.match_info.get('file_id')
+    file_id = request.match_info.get("file_id")
     bot_client = request.app["bot_client"]
 
     try:
         msg = await bot_client.get_messages(int(BIN_CHANNEL), int(file_id))
         media = msg.document or msg.video or msg.audio or msg.photo
-
         if not media:
             return web.Response(text="❌ File not found", status=404)
 
-        file_size = getattr(media, "file_size", 0)
+        file_name, mime_type, file_size = _media_info(media)
 
         range_header = request.headers.get("Range")
-        offset = 0
-        end = file_size - 1
+        start = 0
+        end = file_size - 1 if file_size else 0
         status = 200
 
-        if range_header:
+        if range_header and file_size:
             try:
                 range_val = range_header.strip().replace("bytes=", "")
                 parts = range_val.split("-")
-                offset = int(parts[0]) if parts[0] else 0
+                start = int(parts[0]) if parts[0] else 0
                 end = int(parts[1]) if len(parts) > 1 and parts[1] else file_size - 1
                 status = 206
             except Exception:
-                pass
-
-        length = end - offset + 1
+                start = 0
+                end = file_size - 1
+                status = 200
 
         headers = {
-            "Content-Type": "video/mp4",
-            "Content-Disposition": "inline",
-            "Content-Length": str(length),
+            "Content-Type": mime_type if mime_type != "unknown" else "application/octet-stream",
+            "Content-Disposition": f'inline; filename="{file_name}"',
             "Accept-Ranges": "bytes",
         }
-        if status == 206:
-            headers["Content-Range"] = f"bytes {offset}-{end}/{file_size}"
+
+        if file_size:
+            length = end - start + 1
+            headers["Content-Length"] = str(length)
+            if status == 206:
+                headers["Content-Range"] = f"bytes {start}-{end}/{file_size}"
 
         response = web.StreamResponse(status=status, headers=headers)
         await response.prepare(request)
 
+        sent = 0
         async for chunk in bot_client.stream_media(msg):
+            if file_size and range_header:
+                chunk_end = start + sent + len(chunk)
+                if chunk_end <= start:
+                    sent += len(chunk)
+                    continue
+                if start + sent >= end + 1:
+                    break
             await response.write(chunk)
+            sent += len(chunk)
 
         await response.write_eof()
         return response
@@ -342,22 +297,19 @@ async def stream_handler(request):
 
 
 async def download_handler(request):
-    file_id = request.match_info.get('file_id')
+    file_id = request.match_info.get("file_id")
     bot_client = request.app["bot_client"]
 
     try:
         msg = await bot_client.get_messages(int(BIN_CHANNEL), int(file_id))
         media = msg.document or msg.video or msg.audio or msg.photo
-
         if not media:
             return web.Response(text="❌ File not found", status=404)
 
-        file_name = getattr(media, "file_name", "file")
-        mime_type = getattr(media, "mime_type", "application/octet-stream")
-        file_size = getattr(media, "file_size", 0)
+        file_name, mime_type, file_size = _media_info(media)
 
         headers = {
-            "Content-Type": mime_type,
+            "Content-Type": mime_type if mime_type != "unknown" else "application/octet-stream",
             "Content-Disposition": f'attachment; filename="{file_name}"',
             "Content-Length": str(file_size),
             "Accept-Ranges": "bytes",
@@ -374,4 +326,4 @@ async def download_handler(request):
 
     except Exception as e:
         logger.error(f"Download error: {e}")
-        return web.Response(text=f"❌ Error: {e}", status=500)      
+        return web.Response(text=f"❌ Error: {e}", status=500)
