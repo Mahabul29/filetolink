@@ -8,6 +8,9 @@ from plugins.utils.markup import Buttons
 from plugins.utils.database import db 
 from config import LOG_CHANNEL, ADMINS
 
+# This captures the exact time the bot starts
+START_TIME = time.time()
+
 START_TEXT = (
     "👋 <b>ʜᴇʏ ᴍᴏᴏɴ!!</b>\n\n"
     "ɪ'ᴍ ᴛᴇʟᴇɢʀᴀᴍ ꜰɪʟᴇꜱ ꜱᴛʀᴇᴀᴍɪɴɢ ʙᴏᴛ ᴀꜱ ᴡᴇʟʟ ᴅɪʀᴇᴄᴛ ʟɪɴᴋꜱ ɢᴇɴᴇʀᴀᴛᴏʀ!!\n\n"
@@ -44,7 +47,8 @@ async def help_cmd(client, message):
         "📖 <b>ʜᴇʟᴘ ᴍᴇɴᴜ</b>\n\n"
         "<b>ᴄᴏᴍᴍᴀɴᴅꜱ:</b>\n"
         "• /start — ꜱᴛᴀʀᴛ ᴛʜᴇ ʙᴏᴛ\n"
-        "• /help — ꜱʜᴏᴡ ᴛʜɪꜱ ᴍᴇꜱꜱᴀɢᴇ\n\n"
+        "• /help — ꜱʜᴏᴡ ᴛʜɪꜱ ᴍᴇꜱꜱᴀɢᴇ\n"
+        "• /data — ᴄʜᴇᴄᴋ ʙᴏᴛ ꜱᴛᴀᴛɪꜱᴛɪᴄꜱ\n\n"
         "<b>ʜᴏᴡ ᴛᴏ ᴜꜱᴇ:</b>\n"
         "1️⃣ ꜱᴇɴᴅ ᴀɴʏ ꜰɪʟᴇ, ᴠɪᴅᴇᴏ, ᴏʀ ᴀᴜᴅɪᴏ\n"
         "2️⃣ ɪ'ʟʟ ɢɪᴠᴇ ʏᴏᴜ ᴀ ᴅɪʀᴇᴄᴛ ʟɪɴᴋ\n"
@@ -58,6 +62,29 @@ async def ping_cmd(client, message):
     start = time.time()
     msg = await message.reply_text("🚀")
     await msg.edit_text(f"🏓 <b>ᴘᴏɴɢ!!</b>\n<code>{round((time.time() - start) * 1000)}ᴍꜱ</code>")
+
+@Client.on_message(filters.command("data") & filters.private)
+async def data_cmd(client, message):
+    """Shows how many days/hours the bot has been running"""
+    now = time.time()
+    delta_obj = now - START_TIME
+    
+    # Calculate time units
+    days = int(delta_obj // (24 * 3600))
+    hours = int((delta_obj % (24 * 3600)) // 3600)
+    minutes = int((delta_obj % 3600) // 60)
+    seconds = int(delta_obj % 60)
+
+    # Fetch total users from DB
+    count = await db.total_users_count()
+
+    stats_text = (
+        "📊 <b>ʙᴏᴛ ᴏᴘᴇʀᴀᴛɪᴏɴᴀʟ ᴅᴀᴛᴀ</b>\n\n"
+        f"👤 <b>ᴛᴏᴛᴀʟ ᴜꜱᴇʀꜱ:</b> <code>{count}</code>\n"
+        f"🕒 <b>ᴜᴘᴛɪᴍᴇ:</b> <code>{days}ᴅ {hours}ʜ {minutes}ᴍ {seconds}ꜱ</code>\n\n"
+        "🛰 <b>ꜱᴛᴀᴛᴜꜱ:</b> <code>ꜱʏꜱᴛᴇᴍ ᴏɴʟɪɴᴇ</code>"
+    )
+    await message.reply_text(stats_text)
 
 # --- ADMIN COMMANDS ---
 
@@ -87,7 +114,6 @@ async def broadcast_cmd(client, message):
 
     async for user in all_users:
         try:
-            # Using ['_id'] to match your database.py logic
             user_id = user['_id'] 
             await broadcast_msg.copy(chat_id=int(user_id))
             success += 1
