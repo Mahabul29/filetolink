@@ -1,6 +1,4 @@
 import logging
-import os
-import mimetypes
 from aiohttp import web
 from config import BIN_CHANNEL, FQDN
 
@@ -9,30 +7,9 @@ logger = logging.getLogger(__name__)
 
 def _media_info(media):
     file_name = getattr(media, "file_name", "Unknown File")
-    mime_type = getattr(media, "mime_type", None) or "application/octet-stream"
+    mime_type = getattr(media, "mime_type", "application/octet-stream") or "application/octet-stream"
     file_size = getattr(media, "file_size", 0) or 0
-    base_name = os.path.basename(file_name)
-    root, ext = os.path.splitext(base_name)
-    if not ext:
-        guessed_type, _ = mimetypes.guess_type(base_name)
-        if guessed_type:
-            mime_type = guessed_type
-            ext = mimetypes.guess_extension(guessed_type) or ""
-    return file_name, base_name, root, ext, mime_type, file_size
-
-
-def _is_video_playable(mime_type, file_name):
-    mt = (mime_type or "").lower()
-    fn = (file_name or "").lower()
-    return (
-        "mp4" in mt or
-        "webm" in mt or
-        "ogg" in mt or
-        fn.endswith(".mp4") or
-        fn.endswith(".webm") or
-        fn.endswith(".ogv") or
-        fn.endswith(".ogg")
-    )
+    return file_name, mime_type, file_size
 
 
 async def video_play(request):
@@ -45,52 +22,40 @@ async def video_play(request):
         if not media:
             return web.Response(text="❌ File not found", status=404)
 
-        file_name, base_name, root, ext, mime_type, file_size = _media_info(media)
+        file_name, mime_type, file_size = _media_info(media)
         size_mb = round(file_size / (1024 * 1024), 2)
-        size_bytes = file_size
-        playable = _is_video_playable(mime_type, file_name)
 
         if "video" in mime_type:
             icon = "🎬"
             file_type = "Video"
-            if playable:
-                player_tag = f"""
-                <video controls autoplay playsinline preload="metadata"
-                    style="width:100%;max-width:850px;border-radius:10px;background:#000;border:2px solid #2481cc;">
-                    <source src="/stream/{file_id}" type="{mime_type}">
-                </video>
-                """
-                note = ""
-            else:
-                player_tag = ""
-                note = "<p class='warn'>⚠️ This video format may not play in browser. MP4 works best.</p>"
+            player_tag = f'''
+            <video id="player" controls autoplay playsinline preload="metadata">
+                <source src="/stream/{file_id}" type="{mime_type}">
+                Your browser does not support this video.
+            </video>
+            '''
+            note = ""
         elif "audio" in mime_type:
             icon = "🎵"
             file_type = "Audio"
-            player_tag = f"""
-            <audio controls autoplay preload="metadata"
-                style="width:100%;max-width:850px;">
+            player_tag = f'''
+            <audio id="player" controls autoplay preload="metadata">
                 <source src="/stream/{file_id}" type="{mime_type}">
+                Your browser does not support this audio.
             </audio>
-            """
+            '''
             note = ""
         else:
             icon = "📁"
             file_type = "File"
             player_tag = ""
-            note = "<p class='warn'>⚠️ This file type may not play in browser. You can download it below.</p>"
+            note = "<p class='warn'>⚠️ This file type may not play in browser. Use download.</p>"
 
     except Exception as e:
         logger.error(f"video_play error: {e}")
         file_name = "Unknown"
-        base_name = "Unknown"
-        root = "Unknown"
-        ext = ""
         mime_type = "unknown"
-        file_size = 0
         size_mb = 0
-        size_bytes = 0
-        playable = False
         icon = "📁"
         file_type = "File"
         player_tag = ""
@@ -98,7 +63,6 @@ async def video_play(request):
 
     clean_fqdn = FQDN.replace("https://", "").replace("http://", "").rstrip("/")
     download_url = f"https://{clean_fqdn}/dl/{file_id}"
-    stream_url = f"https://{clean_fqdn}/stream/{file_id}"
 
     html = f"""<!DOCTYPE html>
 <html>
@@ -116,7 +80,6 @@ async def video_play(request):
             align-items: center;
             padding: 20px 15px 40px;
             min-height: 100vh;
-            overflow-x: hidden;
         }}
         .title {{
             color: #2481cc;
@@ -148,30 +111,12 @@ async def video_play(request):
         .info-row:last-child {{ border-bottom: none; }}
         .info-label {{ color: #7fb3d3; }}
         .info-value {{ color: #fff; font-weight: 500; text-align: right; word-break: break-all; }}
-        .player-wrap {{
-            position: relative;
+        video, audio {{
             width: 100%;
             max-width: 850px;
-            margin-bottom: 15px;
-        }}
-        .blue-glow {{
-            position: absolute;
-            left: -35px;
-            top: 20%;
-            width: 140px;
-            height: 260px;
-            background: rgba(40, 128, 255, 0.38);
-            filter: blur(55px);
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 0;
-        }}
-        video, audio {{
-            position: relative;
-            z-index: 1;
-            width: 100%;
             border-radius: 10px;
             background: #000;
+            margin-bottom: 15px;
         }}
         video {{ border: 2px solid #2481cc; }}
         .warn {{
@@ -208,15 +153,6 @@ async def video_play(request):
         .btn-download {{ background: #27ae60; }}
         .btn-copy {{ background: #2481cc; cursor: pointer; }}
         .copied {{ background: #1a6aaa !important; }}
-        @media (max-width: 480px) {{
-            .info-row {{ font-size: 12px; }}
-            .title {{ font-size: 16px; }}
-            .blue-glow {{
-                left: -55px;
-                width: 120px;
-                height: 220px;
-            }}
-        }}
     </style>
 </head>
 <body>
@@ -224,20 +160,13 @@ async def video_play(request):
 
     <div class="info-box">
         <div class="info-row"><span class="info-label">📄 File Name</span><span class="info-value">{file_name}</span></div>
-        <div class="info-row"><span class="info-label">🧾 Base Name</span><span class="info-value">{base_name}</span></div>
-        <div class="info-row"><span class="info-label">🏷️ Extension</span><span class="info-value">{ext or "none"}</span></div>
-        <div class="info-row"><span class="info-label">🎞️ Type</span><span class="info-value">{file_type}</span></div>
-        <div class="info-row"><span class="info-label">📦 MIME</span><span class="info-value">{mime_type}</span></div>
-        <div class="info-row"><span class="info-label">📏 Size</span><span class="info-value">{size_mb} MB ({size_bytes} bytes)</span></div>
+        <div class="info-row"><span class="info-label">📦 Size</span><span class="info-value">{size_mb} MB</span></div>
+        <div class="info-row"><span class="info-label">🎞️ Type</span><span class="info-value">{file_type} ({mime_type})</span></div>
         <div class="info-row"><span class="info-label">🆔 File ID</span><span class="info-value">{file_id}</span></div>
-        <div class="info-row"><span class="info-label">▶ Playable</span><span class="info-value">{'Yes' if playable else 'No'}</span></div>
     </div>
 
     {note}
-    <div class="player-wrap">
-        <div class="blue-glow"></div>
-        {player_tag}
-    </div>
+    {player_tag}
 
     <div class="top-buttons">
         <a href="{download_url}" class="btn btn-download">⬇ Download</a>
@@ -273,11 +202,14 @@ async def stream_handler(request):
         if not media:
             return web.Response(text="❌ File not found", status=404)
 
-        file_name, _, _, _, mime_type, _ = _media_info(media)
-        response = web.StreamResponse(status=200, headers={
+        file_name, mime_type, file_size = _media_info(media)
+        headers = {
             "Content-Type": mime_type if mime_type != "unknown" else "application/octet-stream",
             "Content-Disposition": f'inline; filename="{file_name}"',
-        })
+            "Accept-Ranges": "bytes",
+        }
+
+        response = web.StreamResponse(status=200, headers=headers)
         await response.prepare(request)
 
         async for chunk in bot_client.stream_media(msg):
@@ -301,11 +233,13 @@ async def download_handler(request):
         if not media:
             return web.Response(text="❌ File not found", status=404)
 
-        file_name, _, _, _, mime_type, _ = _media_info(media)
-        response = web.StreamResponse(status=200, headers={
+        file_name, mime_type, file_size = _media_info(media)
+        headers = {
             "Content-Type": mime_type if mime_type != "unknown" else "application/octet-stream",
             "Content-Disposition": f'attachment; filename="{file_name}"',
-        })
+        }
+
+        response = web.StreamResponse(status=200, headers=headers)
         await response.prepare(request)
 
         async for chunk in bot_client.stream_media(msg):
