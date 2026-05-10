@@ -18,65 +18,68 @@ class Bot(Client):
         await super().start()
         print("🤖 Bot session started!")
 
-        # --- THE CORRECT PEER FIX ---
-        # Bots CANNOT use get_dialogs. We use get_chat instead.
-        print("🔄 Waking up channel connections...")
+        # Peer ID Warm-up
         for channel_id in [LOG_CHANNEL, BIN_CHANNEL]:
             try:
-                # This forces the bot to recognize the channel ID
                 chat = await self.get_chat(channel_id)
-                # Fetching one message history 'warms up' the peer connection
                 async for _ in self.get_chat_history(channel_id, limit=1):
                     break
-                print(f"✅ Connection Verified: {chat.title}")
             except Exception as e:
-                print(f"⚠️ Peer ID Warning for {channel_id}: {e}")
+                print(f"⚠️ Connection Warning: {e}")
 
-        # --- WEB SERVER SETUP ---
         bot_ref = self
 
         async def health(request):
             return web.Response(text="Bot is Running")
 
+        # STREAMING PLAYER ROUTE
+        async def video_player(request):
+            file_id = request.match_info["file_id"]
+            html_content = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Video Player</title>
+                <style>
+                    body {{ background: #0b1521; color: white; text-align: center; font-family: sans-serif; padding-top: 50px; }}
+                    video {{ width: 95%; max-width: 800px; border-radius: 10px; border: 2px solid #2481cc; }}
+                    .dl-btn {{ display: inline-block; padding: 12px 25px; background: #2481cc; color: white; text-decoration: none; border-radius: 5px; margin-top: 25px; font-weight: bold; }}
+                </style>
+            </head>
+            <body>
+                <video controls autoplay><source src="https://{FQDN}/dl/{file_id}" type="video/mp4"></video>
+                <br><a href="https://{FQDN}/dl/{file_id}" class="dl-btn">DOWNLOAD NOW</a>
+            </body>
+            </html>
+            """
+            return web.Response(text=html_content, content_type='text/html')
+
         async def stream_file(request):
             try:
                 file_id = int(request.match_info["file_id"])
                 msg = await bot_ref.get_messages(BIN_CHANNEL, file_id)
-                
-                if not msg or not msg.media:
-                    return web.Response(status=404, text="File not found")
-
                 media = msg.document or msg.video or msg.audio
-                file_name = getattr(media, "file_name", "file")
-                mime = getattr(media, "mime_type", "application/octet-stream")
-
-                headers = {
-                    "Content-Disposition": f'attachment; filename="{file_name}"',
-                    "Content-Type": mime,
-                }
+                headers = {{
+                    "Content-Disposition": f'attachment; filename="{{media.file_name}}"',
+                    "Content-Type": media.mime_type,
+                }}
                 response = web.StreamResponse(headers=headers)
                 await response.prepare(request)
-
                 async for chunk in bot_ref.stream_media(msg):
                     await response.write(chunk)
-
                 await response.write_eof()
                 return response
-            except Exception as e:
-                return web.Response(status=500, text=str(e))
+            except:
+                return web.Response(status=404)
 
         app = web.Application()
         app.router.add_get("/", health)
+        app.router.add_get("/watch/{file_id}", video_player)
         app.router.add_get("/dl/{file_id}", stream_file)
-
         runner = web.AppRunner(app)
         await runner.setup()
-        site = web.TCPSite(runner, "0.0.0.0", PORT)
-        await site.start() 
-        
-        print(f"🚀 Health Check live on port {PORT}")
-        print(f"✅ Bot is fully online!")
+        await web.TCPSite(runner, "0.0.0.0", PORT).start()
 
     async def stop(self, *args):
         await super().stop()
-            
+        
