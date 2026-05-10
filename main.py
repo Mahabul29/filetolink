@@ -4,7 +4,6 @@ from threading import Thread
 from bot import Bot
 import os
 
-# --- KOYEB HEALTH CHECK SERVER ---
 app = Flask(__name__)
 
 @app.route('/')
@@ -12,13 +11,12 @@ def health_check():
     return "Bot is Alive!", 200
 
 def run_web():
-    # Koyeb provides the PORT environment variable automatically
-    port = int(os.environ.get("PORT", 8080))
-    app.run(host='0.0.0.0', port=port)
+    # CHANGE THIS: Use a different port for Flask (e.g., 8000)
+    # This allows your main bot server to use the required 8080
+    app.run(host='0.0.0.0', port=8000)
 
-# --- BOT START LOGIC ---
 async def start_bot():
-    print("🚀 Starting Web Server for Koyeb...")
+    print("🚀 Starting Web Server for Koyeb on port 8000...")
     Thread(target=run_web, daemon=True).start()
     
     print("🤖 Bot is starting...")
@@ -26,7 +24,6 @@ async def start_bot():
     await bot_instance.start()
     
     print("✅ Bot is fully online!")
-    # Keeps the asyncio loop running
     await asyncio.Event().wait()
 
 if __name__ == "__main__":
