@@ -28,7 +28,7 @@ PLAYERS = {
 
 async def play_handler(request):
     file_id = request.match_info.get("file_id")
-    player_key = request.match_info.get("player")  # vlc / mx / sp
+    player_key = request.match_info.get("player")
     bot_client = request.app["bot_client"]
 
     player = PLAYERS.get(player_key)
@@ -37,9 +37,8 @@ async def play_handler(request):
 
     clean_fqdn = FQDN.replace("https://", "").replace("http://", "").rstrip("/")
     stream_url = f"https://{clean_fqdn}/stream/{file_id}"
-    package = player["package"]
-
-    # Direct intent URL - no iframe trick
+    watch_url  = f"https://{clean_fqdn}/watch/{file_id}"
+    package    = player["package"]
     intent_url = f"intent:{stream_url}#Intent;package={package};action=android.intent.action.VIEW;type=video/mp4;end"
     market_url = f"https://play.google.com/store/apps/details?id={package}"
 
@@ -73,9 +72,9 @@ async def play_handler(request):
         }}
         .icon {{ font-size: 64px; margin-bottom: 16px; }}
         .player-name {{
-            font-size: 24px;
+            font-size: 26px;
             font-weight: bold;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             background: {player['color']};
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -90,10 +89,10 @@ async def play_handler(request):
         .file-size {{
             color: #4a7a9b;
             font-size: 13px;
-            margin-bottom: 30px;
+            margin-bottom: 35px;
         }}
         .open-btn {{
-            display: inline-block;
+            display: block;
             padding: 16px 40px;
             border-radius: 12px;
             font-size: 17px;
@@ -101,73 +100,75 @@ async def play_handler(request):
             color: white;
             text-decoration: none;
             background: {player['color']};
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             width: 100%;
             max-width: 320px;
             transition: opacity 0.2s;
         }}
         .open-btn:hover {{ opacity: 0.85; }}
         .install-btn {{
-            display: inline-block;
+            display: block;
             padding: 13px 30px;
             border-radius: 12px;
             font-size: 14px;
             font-weight: bold;
             color: white;
             text-decoration: none;
-            background: #2c3e50;
-            border: 1px solid #4a7a9b;
+            background: #1e3a55;
+            border: 1px solid #2481cc44;
             width: 100%;
             max-width: 320px;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             transition: opacity 0.2s;
         }}
         .install-btn:hover {{ opacity: 0.85; }}
         .back-btn {{
-            color: #4a7a9b;
-            font-size: 13px;
+            display: block;
+            padding: 11px 30px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #7fb3d3;
             text-decoration: none;
-            margin-top: 10px;
+            background: #112033;
+            border: 1px solid #1e3a55;
+            width: 100%;
+            max-width: 320px;
+            margin-bottom: 25px;
+            transition: opacity 0.2s;
         }}
-        .back-btn:hover {{ color: #7fb3d3; }}
+        .back-btn:hover {{ opacity: 0.85; }}
         .note {{
             color: #4a7a9b;
             font-size: 12px;
-            margin-top: 20px;
             max-width: 320px;
-            line-height: 1.5;
+            line-height: 1.6;
         }}
     </style>
 </head>
 <body>
+
     <div class="icon">{player['icon']}</div>
     <div class="player-name">{player['name']}</div>
     <div class="file-name">📄 {file_name}</div>
     <div class="file-size">📦 {size_mb} MB</div>
 
-    <!-- Direct intent link - opens app directly -->
-    <a href="{intent_url}" class="open-btn">
-        ▶ Open in {player['name']}
-    </a>
-
-    <!-- Install from Play Store -->
-    <a href="{market_url}" target="_blank" class="install-btn">
-        📥 Install {player['name']}
-    </a>
-
-    <a href="javascript:history.back()" class="back-btn">← Back to player page</a>
+    <a href="{intent_url}" class="open-btn">▶ Open in {player['name']}</a>
+    <a href="{market_url}" target="_blank" class="install-btn">📥 Install {player['name']}</a>
+    <a href="{watch_url}" class="back-btn">← Back to Player Page</a>
 
     <p class="note">
-        If the app doesn't open, make sure {player['name']} is installed.
-        Tap "Install" to get it from Play Store.
+        Tap "Open" to launch {player['name']}.<br>
+        If it doesn't open, tap "Install" to get it from Play Store.
     </p>
 
     <script>
-        // Auto-trigger the intent on page load
+        // Auto-trigger intent on load
         window.onload = function() {{
             window.location.href = "{intent_url}";
         }};
     </script>
+
 </body>
 </html>"""
     return web.Response(text=html, content_type='text/html')
