@@ -1,8 +1,7 @@
-<p align="center">
-  <img src="https://www.uhdpaper.com/2023/07/genshin-impact-furina-game-4k-161m-original.jpg" alt="Bot Banner" width="100%">
-</p>
-
-# 🚀 File-to-Link Bot (Private Version)
+<div align="center">
+<img src="https://prod.assets.earlygamecdn.com/images/Chisa.jpg?transform=Banner+Webp" alt="Bot Banner" width="800"/>
+<p>🩵 <b>Thanks for Being Here</b> 🩵</p>
+</div>
 
 # 🚀 File-to-Link Bot (Private Version)
 
