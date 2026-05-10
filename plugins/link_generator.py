@@ -4,33 +4,35 @@ from config import BIN_CHANNEL, FQDN
 
 @Client.on_message(filters.private & (filters.document | filters.video | filters.audio))
 async def link_generator_handler(client, message):
-    msg = await message.reply_text("⏳ <b>Processing...</b>")
+    msg = await message.reply_text("Processing...")
     
     try:
+        # Forward/Copy message to the Bin Channel
         copied_msg = await message.copy(chat_id=BIN_CHANNEL)
 
+        # Generate links
         download_link = f"https://{FQDN}/dl/{copied_msg.id}"
         stream_link = f"https://{FQDN}/watch/{copied_msg.id}"
 
+        # Get file metadata
         media = message.document or message.video or message.audio
         file_name = getattr(media, "file_name", "Unknown")
         size_mb = round(getattr(media, "file_size", 0) / (1024 * 1024), 2)
 
-        # Improved text to match your screenshot
-        text = f"""<b>Your Link Generated !</b>
+        # Exact layout and font styling to match the image
+        text = (
+            "<b>𝗬𝗼𝘂𝗿 𝗟𝗶𝗻𝗸 𝗚𝗲𝗻𝗲𝗿𝗮𝘁𝗲𝗱 ♥︎</b>\n\n"
+            f"<b>ғɪʟᴇ ɴᴀᴍᴇ:</b> <code>{file_name}</code>\n"
+            f"<b>ғɪʟᴇ sɪᴢᴇ:</b> <code>{size_mb} MB</code>\n\n"
+            f"<b>𝙳𝚘𝚠𝚗𝚕𝚘𝚍:</b>\n<code>{download_link}</code>\n\n"
+            f"<b>𝚂𝚝𝚛𝚎𝚊𝚖:</b>\n<code>{stream_link}</code>"
+        )
 
-📁 <b>FILE NAME :</b> <code>{file_name}</code>
-
-📦 <b>FILE SIZE :</b> <code>{size_mb} MB</code>
-
-🔗 <b>DOWNLOAD :</b> <code>{download_link}</code>
-
-💎 <b>NOTE :</b> <i>All Created Links Will Expire After 24 Hours</i>"""
-
+        # Side-by-side buttons with arrows
         keyboard = InlineKeyboardMarkup([
             [
-                InlineKeyboardButton("⬇ Download", url=download_link),
-                InlineKeyboardButton("▶ Stream", url=stream_link)
+                InlineKeyboardButton("𝙳𝚘𝚠𝚗𝚕𝚘𝚍 ↗", url=download_link),
+                InlineKeyboardButton("𝚂𝚝𝚛𝚎𝚊𝚖 ↗", url=stream_link)
             ]
         ])
 
@@ -41,4 +43,5 @@ async def link_generator_handler(client, message):
         )
 
     except Exception as e:
-        await msg.edit_text(f"❌ <b>Error:</b> <code>{str(e)}</code>")
+        await msg.edit_text(f"Error: <code>{str(e)}</code>")
+        
