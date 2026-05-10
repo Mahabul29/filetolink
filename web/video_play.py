@@ -29,24 +29,20 @@ async def video_play(request):
             icon = "🎬"
             file_type = "Video"
             player_tag = f'''
-            <div class="video-wrap">
-                <video id="player" controls autoplay playsinline preload="metadata">
-                    <source src="/stream/{file_id}" type="{mime_type}">
-                    Your browser does not support this video.
-                </video>
-            </div>
+            <video id="player" controls autoplay playsinline preload="metadata">
+                <source src="/stream/{file_id}" type="{mime_type}">
+                Your browser does not support this video.
+            </video>
             '''
             note = ""
         elif "audio" in mime_type:
             icon = "🎵"
             file_type = "Audio"
             player_tag = f'''
-            <div class="video-wrap">
-                <audio id="player" controls autoplay preload="metadata">
-                    <source src="/stream/{file_id}" type="{mime_type}">
-                    Your browser does not support this audio.
-                </audio>
-            </div>
+            <audio id="player" controls autoplay preload="metadata">
+                <source src="/stream/{file_id}" type="{mime_type}">
+                Your browser does not support this audio.
+            </audio>
             '''
             note = ""
         else:
@@ -76,48 +72,15 @@ async def video_play(request):
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         body {{
-            background: #000;
+            background: #0b1521;
             color: white;
             font-family: Arial, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
+            padding: 20px 15px 40px;
             min-height: 100vh;
         }}
-
-        /* ── video wrapper — full width, pure black, no gaps ── */
-        .video-wrap {{
-            width: 100%;
-            background: #000;
-            line-height: 0;
-            margin-bottom: 0;
-        }}
-        video {{
-            width: 100%;
-            display: block;
-            background: #000;
-            border-radius: 0;
-            border: none;
-            margin: 0;
-        }}
-        audio {{
-            width: 100%;
-            display: block;
-            background: #000;
-            margin: 0;
-        }}
-
-        /* ── content below video ── */
-        .content {{
-            width: 100%;
-            background: #0b1521;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px 15px 40px;
-            flex: 1;
-        }}
-
         .title {{
             color: #2481cc;
             font-size: 18px;
@@ -148,6 +111,14 @@ async def video_play(request):
         .info-row:last-child {{ border-bottom: none; }}
         .info-label {{ color: #7fb3d3; }}
         .info-value {{ color: #fff; font-weight: 500; text-align: right; word-break: break-all; }}
+        video, audio {{
+            width: 100%;
+            max-width: 850px;
+            border-radius: 10px;
+            background: #000;
+            margin-bottom: 15px;
+        }}
+        video {{ border: 2px solid #2481cc; }}
         .warn {{
             color: #f39c12;
             background: #1a1200;
@@ -185,25 +156,21 @@ async def video_play(request):
     </style>
 </head>
 <body>
+    <div class="title">{icon} {file_name}</div>
 
+    <div class="info-box">
+        <div class="info-row"><span class="info-label">📄 File Name</span><span class="info-value">{file_name}</span></div>
+        <div class="info-row"><span class="info-label">📦 Size</span><span class="info-value">{size_mb} MB</span></div>
+        <div class="info-row"><span class="info-label">🎞️ Type</span><span class="info-value">{file_type} ({mime_type})</span></div>
+        <div class="info-row"><span class="info-label">🆔 File ID</span><span class="info-value">{file_id}</span></div>
+    </div>
+
+    {note}
     {player_tag}
 
-    <div class="content">
-        <div class="title">{icon} {file_name}</div>
-
-        <div class="info-box">
-            <div class="info-row"><span class="info-label">📄 File Name</span><span class="info-value">{file_name}</span></div>
-            <div class="info-row"><span class="info-label">📦 Size</span><span class="info-value">{size_mb} MB</span></div>
-            <div class="info-row"><span class="info-label">🎞️ Type</span><span class="info-value">{file_type} ({mime_type})</span></div>
-            <div class="info-row"><span class="info-label">🆔 File ID</span><span class="info-value">{file_id}</span></div>
-        </div>
-
-        {note}
-
-        <div class="top-buttons">
-            <a href="{download_url}" class="btn btn-download">⬇ Download</a>
-            <button class="btn btn-copy" onclick="copyLink()">🔗 Copy Link</button>
-        </div>
+    <div class="top-buttons">
+        <a href="{download_url}" class="btn btn-download">⬇ Download</a>
+        <button class="btn btn-copy" onclick="copyLink()">🔗 Copy Link</button>
     </div>
 
     <script>
@@ -283,4 +250,4 @@ async def download_handler(request):
 
     except Exception as e:
         logger.error(f"Download error: {e}")
-        return web.Response(text=f"❌
+        return web.Response(text=f"❌ Error: {e}", status=500)
