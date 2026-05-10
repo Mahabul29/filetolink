@@ -34,8 +34,8 @@ async def link_generator_handler(client, message):
         # Buttons side-by-side (placed in the same row list)
         keyboard = InlineKeyboardMarkup([
             [
-                InlineKeyboardButton("𝙳𝚘𝚠𝚗𝚕𝚘𝚊𝚍 ↗", url=download_link),
-                InlineKeyboardButton("𝚂𝚝𝚛𝚎𝚊𝚖 ↗", url=stream_link)
+                InlineKeyboardButton("𝙳𝚘𝚠𝚗𝚕𝚘𝚊𝚍", url=download_link),
+                InlineKeyboardButton("𝚂𝚝𝚛𝚎𝚊𝚖", url=stream_link)
             ]
         ])
 
