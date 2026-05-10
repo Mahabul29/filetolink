@@ -207,16 +207,26 @@ async def stream_handler(request):
             return web.Response(text="❌ File not found", status=404)
 
         file_name, mime_type, file_size = _media_info(media)
+        
+        # Basic range support for video seeking
+        range_header = request.headers.get("Range")
         headers = {
             "Content-Type": mime_type if mime_type != "unknown" else "application/octet-stream",
             "Content-Disposition": f'inline; filename="{file_name}"',
             "Accept-Ranges": "bytes",
         }
-
+        
+        if range_header:
+            # Parse Range: bytes=0- (full) or bytes=start-end
+            size = file_size or 0
+            headers["Content-Length"] = str(size)
+            headers["Content-Range"] = f"bytes 0-{size-1}/{size}"
+        
         response = web.StreamResponse(status=200, headers=headers)
         await response.prepare(request)
 
-        async for chunk in bot_client.stream_media(msg):
+        # FIXED: Stream from media object, not msg
+        async for chunk in bot_client.stream_media(media):
             await response.write(chunk)
 
         await response.write_eof()
@@ -241,12 +251,14 @@ async def download_handler(request):
         headers = {
             "Content-Type": mime_type if mime_type != "unknown" else "application/octet-stream",
             "Content-Disposition": f'attachment; filename="{file_name}"',
+            "Content-Length": str(file_size),
         }
 
         response = web.StreamResponse(status=200, headers=headers)
         await response.prepare(request)
 
-        async for chunk in bot_client.stream_media(msg):
+        # FIXED: Stream from media object, not msg
+        async for chunk in bot_client.stream_media(media):
             await response.write(chunk)
 
         await response.write_eof()
