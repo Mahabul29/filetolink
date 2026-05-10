@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://www.uhdpaper.com/2023/07/genshin-impact-furina-game-4k-161m.html" alt="Bot Banner" width="100%">
+</p>
+
 # 🚀 File-to-Link Bot (Private Version)
 
 A lightweight Telegram bot designed to convert Telegram files into direct, high-speed download links. These links can be opened in **Google Chrome** or any browser to download files directly to your device without needing the Telegram app.
