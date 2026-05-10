@@ -15,12 +15,12 @@ class Bot(Client):
 
     async def start(self):
         await super().start()
-        # Fix Peer ID invalid by fetching channel info on start
+        # Resolve Peer ID for the storage channel
         try:
             await self.get_chat(BIN_CHANNEL)
             print("✅ Connection to Bin Channel Verified")
         except Exception as e:
-            print(f"❌ Bin Channel Error: {{e}}")
+            print(f"❌ Bin Channel Error: {e}")
 
         self.runner = await web_server(self)
 
