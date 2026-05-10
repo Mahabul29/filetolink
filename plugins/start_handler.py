@@ -1,25 +1,76 @@
-from pyrogram import Client, filters
-from config import BIN_CHANNEL
+import os
+import asyncio
+from pyrogram import Client
+from aiohttp import web
+from config import API_ID, API_HASH, BOT_TOKEN, LOG_CHANNEL, BIN_CHANNEL, PORT, FQDN
 
-@Client.on_message(filters.command("start") & filters.private)
-async def start_handler(client, message):
-    if len(message.command) > 1 and message.command[1].startswith("file_"):
-        try:
-            file_id = int(message.command[1].split("_")[1])
-            
-            # Use 'copy' which is faster and keeps the peer connection alive
-            await client.copy_message(
-                chat_id=message.chat.id,
-                from_chat_id=BIN_CHANNEL,
-                message_id=file_id
-            )
-        except Exception as e:
-            # If it fails, try one more time by fetching the message first
+class Bot(Client):
+    def __init__(self):
+        super().__init__(
+            name="Udybot",
+            api_id=API_ID,
+            api_hash=API_HASH,
+            bot_token=BOT_TOKEN,
+            plugins=dict(root="plugins")
+        )
+
+    async def start(self):
+        await super().start()
+        print("🤖 Bot session started!")
+
+        # --- THE ULTIMATE PEER FIX ---
+        print("🔄 Force-linking channels to prevent Peer ID errors...")
+        for channel_id in [LOG_CHANNEL, BIN_CHANNEL]:
             try:
-                msg = await client.get_messages(BIN_CHANNEL, file_id)
-                await msg.copy(message.chat.id)
-            except:
-                await message.reply_text("❌ ꜰɪʟᴇ ɴᴏᴛ ꜰᴏᴜɴᴅ. ᴘʟᴇᴀꜱᴇ ᴛʀʏ ᴀɢᴀɪɴ ɪɴ ᴀ ᴍᴏᴍᴇɴᴛ.")
-    else:
-        await message.reply_text("👋 Welcome! Send me a file to get started.")
+                # Force the bot to fetch the chat and history to cache the Peer ID
+                chat = await self.get_chat(channel_id)
+                async for _ in self.get_chat_history(channel_id, limit=1):
+                    break
+                print(f"✅ Connection Verified: {chat.title}")
+            except Exception as e:
+                print(f"⚠️ Connection Warning for {channel_id}: {e}")
+
+        # --- WEB SERVER SETUP ---
+        bot_ref = self
+
+        async def health(request):
+            return web.Response(text="Bot is Running")
+
+        async def stream_file(request):
+            try:
+                file_id = int(request.match_info["file_id"])
+                msg = await bot_ref.get_messages(BIN_CHANNEL, file_id)
+                if not msg or not msg.media:
+                    return web.Response(status=404, text="File not found")
+
+                media = msg.document or msg.video or msg.audio
+                file_name = getattr(media, "file_name", "file")
+                mime = getattr(media, "mime_type", "application/octet-stream")
+
+                headers = {
+                    "Content-Disposition": f'attachment; filename="{file_name}"',
+                    "Content-Type": mime,
+                }
+                response = web.StreamResponse(headers=headers)
+                await response.prepare(request)
+                async for chunk in bot_ref.stream_media(msg):
+                    await response.write(chunk)
+                await response.write_eof()
+                return response
+            except Exception as e:
+                return web.Response(status=500, text=str(e))
+
+        app = web.Application()
+        app.router.add_get("/", health)
+        app.router.add_get("/dl/{file_id}", stream_file)
+
+        runner = web.AppRunner(app)
+        await runner.setup()
+        site = web.TCPSite(runner, "0.0.0.0", PORT)
+        await site.start() 
+        print(f"🚀 Server live on port {PORT}")
+
+    async def stop(self, *args):
+        await super().stop()
+        print("🛑 Bot Stopped.")
         
