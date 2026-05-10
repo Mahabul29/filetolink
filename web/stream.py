@@ -9,7 +9,6 @@ async def video_player(request):
     file_id = request.match_info.get("file_id")
     bot_client = request.app["bot_client"]
 
-    # Fetch file info to display
     try:
         msg = await bot_client.get_messages(int(BIN_CHANNEL), int(file_id))
         media = msg.document or msg.video or msg.audio or msg.photo
@@ -18,7 +17,6 @@ async def video_player(request):
         file_size = getattr(media, "file_size", 0)
         size_mb = round(file_size / (1024 * 1024), 2)
 
-        # Determine file type for icon
         if "video" in mime_type:
             icon = "🎬"
             file_type = "Video"
@@ -29,9 +27,8 @@ async def video_player(request):
             icon = "📁"
             file_type = "Document"
 
-        # Browser can only play mp4/webm natively
         can_play = any(x in mime_type for x in ["mp4", "webm", "ogg", "audio"])
-        playable_note = "" if can_play else "<p class='warn'>⚠️ This format may not play in browser. Please download instead.</p>"
+        playable_note = "" if can_play else "<p class='warn'>⚠️ This format may not play in browser. Use VLC / MX Player below.</p>"
 
     except Exception as e:
         file_name = "Unknown"
@@ -41,6 +38,14 @@ async def video_player(request):
         file_type = "File"
         can_play = False
         playable_note = "<p class='warn'>⚠️ Could not fetch file info.</p>"
+
+    stream_url = f"https://{FQDN}/stream/{file_id}"
+    download_url = f"https://{FQDN}/dl/{file_id}"
+
+    # External player deep links
+    vlc_url = f"vlc://{stream_url}"
+    mx_url = f"intent:{stream_url}#Intent;package=com.mxtech.videoplayer.ad;end"
+    sp_url = f"intent:{stream_url}#Intent;package=com.splayer.splayer;end"
 
     html_content = f"""<!DOCTYPE html>
 <html>
@@ -56,96 +61,152 @@ async def video_player(request):
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 25px 15px;
+            padding: 20px 15px 40px;
             min-height: 100vh;
         }}
+
         .title {{
             color: #2481cc;
-            font-size: 20px;
+            font-size: 18px;
             font-weight: bold;
             margin-bottom: 15px;
             text-align: center;
+            line-height: 1.4;
         }}
+
         .info-box {{
             background: #112033;
-            border: 1px solid #2481cc33;
+            border: 1px solid #2481cc44;
             border-radius: 12px;
-            padding: 15px 20px;
+            padding: 12px 16px;
             width: 100%;
             max-width: 850px;
-            margin-bottom: 18px;
+            margin-bottom: 15px;
         }}
         .info-row {{
             display: flex;
             justify-content: space-between;
-            padding: 6px 0;
+            padding: 7px 0;
             border-bottom: 1px solid #1e3a55;
-            font-size: 14px;
+            font-size: 13px;
         }}
         .info-row:last-child {{ border-bottom: none; }}
         .info-label {{ color: #7fb3d3; }}
-        .info-value {{ color: #ffffff; font-weight: 500; word-break: break-all; text-align: right; max-width: 60%; }}
+        .info-value {{
+            color: #fff;
+            font-weight: 500;
+            word-break: break-all;
+            text-align: right;
+            max-width: 60%;
+        }}
+
         video, audio {{
             width: 100%;
             max-width: 850px;
             border-radius: 10px;
             border: 2px solid #2481cc;
             background: #000;
-            margin-bottom: 18px;
+            margin-bottom: 15px;
         }}
+
         .warn {{
             color: #f39c12;
             background: #1a1200;
-            border: 1px solid #f39c12;
+            border: 1px solid #f39c1266;
             border-radius: 8px;
             padding: 10px 15px;
-            margin-bottom: 15px;
-            font-size: 14px;
+            margin-bottom: 12px;
+            font-size: 13px;
             width: 100%;
             max-width: 850px;
             text-align: center;
         }}
-        .buttons {{
+
+        /* TOP BUTTONS: Download + Copy */
+        .top-buttons {{
             display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            justify-content: center;
+            gap: 10px;
             width: 100%;
             max-width: 850px;
+            margin-bottom: 20px;
         }}
         .btn {{
             flex: 1;
-            min-width: 140px;
-            padding: 13px 20px;
+            padding: 13px 10px;
             color: white;
             text-decoration: none;
             border-radius: 10px;
             font-weight: bold;
-            font-size: 15px;
+            font-size: 14px;
             text-align: center;
             transition: opacity 0.2s;
+            cursor: pointer;
+            border: none;
         }}
         .btn:hover {{ opacity: 0.85; }}
         .btn-download {{ background: #27ae60; }}
-        .btn-copy {{
-            background: #2481cc;
-            cursor: pointer;
-            border: none;
-            font-size: 15px;
-        }}
+        .btn-copy {{ background: #2481cc; }}
         .copied {{ background: #1a6aaa !important; }}
+
+        /* PLAYER SECTION */
+        .player-section {{
+            width: 100%;
+            max-width: 850px;
+            background: #112033;
+            border: 1px solid #2481cc44;
+            border-radius: 14px;
+            padding: 16px;
+        }}
+        .player-title {{
+            color: #7fb3d3;
+            font-size: 13px;
+            margin-bottom: 12px;
+            text-align: center;
+            letter-spacing: 0.5px;
+        }}
+        .player-buttons {{
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }}
+        .player-btn {{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding: 14px 20px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: bold;
+            color: white;
+            flex: 1;
+            min-width: 90px;
+            transition: opacity 0.2s, transform 0.1s;
+        }}
+        .player-btn:hover {{
+            opacity: 0.85;
+            transform: scale(1.03);
+        }}
+        .player-btn .icon {{ font-size: 28px; }}
+        .btn-vlc {{ background: linear-gradient(135deg, #ff7700, #cc5500); }}
+        .btn-mx  {{ background: linear-gradient(135deg, #1a73e8, #0d47a1); }}
+        .btn-sp  {{ background: linear-gradient(135deg, #9c27b0, #6a0080); }}
     </style>
 </head>
 <body>
+
     <div class="title">{icon} {file_name}</div>
 
+    <!-- File Info -->
     <div class="info-box">
         <div class="info-row">
             <span class="info-label">📄 File Name</span>
             <span class="info-value">{file_name}</span>
         </div>
         <div class="info-row">
-            <span class="info-label">📦 File Size</span>
+            <span class="info-label">📦 Size</span>
             <span class="info-value">{size_mb} MB</span>
         </div>
         <div class="info-row">
@@ -160,16 +221,37 @@ async def video_player(request):
 
     {playable_note}
 
-    {'<video controls autoplay playsinline><source src="https://' + FQDN + '/stream/' + file_id + '" type="video/mp4">Your browser does not support this video.</video>' if "video" in mime_type or "audio" not in mime_type else '<audio controls autoplay><source src="https://' + FQDN + '/stream/' + file_id + '">Your browser does not support audio.</audio>'}
+    <!-- Browser Video Player -->
+    {'<video controls autoplay playsinline><source src="' + stream_url + '" type="video/mp4">Your browser does not support this video.</video>' if "video" in mime_type else '<audio controls autoplay><source src="' + stream_url + '">Your browser does not support audio.</audio>' if "audio" in mime_type else ''}
 
-    <div class="buttons">
-        <a href="https://{FQDN}/dl/{file_id}" class="btn btn-download">⬇ Download File</a>
+    <!-- Download + Copy -->
+    <div class="top-buttons">
+        <a href="{download_url}" class="btn btn-download">⬇ Download</a>
         <button class="btn btn-copy" onclick="copyLink()">🔗 Copy Link</button>
+    </div>
+
+    <!-- External Players -->
+    <div class="player-section">
+        <div class="player-title">▶ OPEN WITH EXTERNAL PLAYER</div>
+        <div class="player-buttons">
+            <a href="{vlc_url}" class="player-btn btn-vlc">
+                <span class="icon">🟠</span>
+                VLC Player
+            </a>
+            <a href="{mx_url}" class="player-btn btn-mx">
+                <span class="icon">🔵</span>
+                MX Player
+            </a>
+            <a href="{sp_url}" class="player-btn btn-sp">
+                <span class="icon">🟣</span>
+                SP Player
+            </a>
+        </div>
     </div>
 
     <script>
         function copyLink() {{
-            navigator.clipboard.writeText("https://{FQDN}/dl/{file_id}");
+            navigator.clipboard.writeText("{download_url}");
             const btn = document.querySelector('.btn-copy');
             btn.textContent = '✅ Copied!';
             btn.classList.add('copied');
@@ -179,13 +261,13 @@ async def video_player(request):
             }}, 2000);
         }}
     </script>
+
 </body>
 </html>"""
     return web.Response(text=html_content, content_type='text/html')
 
 
 async def stream_handler(request):
-    """Browser streaming — sends raw bytes"""
     file_id = request.match_info.get('file_id')
     bot_client = request.app["bot_client"]
 
@@ -197,7 +279,6 @@ async def stream_handler(request):
             return web.Response(text="❌ File not found", status=404)
 
         file_size = getattr(media, "file_size", 0)
-        mime_type = getattr(media, "mime_type", "video/mp4")
 
         range_header = request.headers.get("Range")
         offset = 0
@@ -240,7 +321,6 @@ async def stream_handler(request):
 
 
 async def download_handler(request):
-    """Forces file download with real filename"""
     file_id = request.match_info.get('file_id')
     bot_client = request.app["bot_client"]
 
