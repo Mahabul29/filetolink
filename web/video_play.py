@@ -12,6 +12,14 @@ def _media_info(media):
     return file_name, mime_type, file_size
 
 
+def _guess_lang_tracks(file_name):
+    base = file_name.rsplit(".", 1)[0]
+    return [
+        {"label": "English", "srclang": "en", "src": f"/subs/{base}.en.vtt"},
+        {"label": "Hindi", "srclang": "hi", "src": f"/subs/{base}.hi.vtt"},
+    ]
+
+
 async def video_play(request):
     file_id = request.match_info.get("file_id")
     bot_client = request.app["bot_client"]
@@ -28,28 +36,38 @@ async def video_play(request):
         if "video" in mime_type:
             icon = "🎬"
             file_type = "Video"
-            player_tag = f'''
-            <video id="player" controls autoplay playsinline preload="metadata">
-                <source src="/stream/{file_id}" type="{mime_type}">
-                Your browser does not support this video.
-            </video>
-            '''
+            subtitles = ""
+            for tr in _guess_lang_tracks(file_name):
+                subtitles += f'<track label="{tr["label"]}" kind="subtitles" srclang="{tr["srclang"]}" src="{tr["src"]}">'
+            player_tag = f"""
+            <div class="player-wrap">
+                <div class="blue-glow"></div>
+                <video id="player" controls autoplay playsinline preload="metadata">
+                    <source src="/stream/{file_id}" type="{mime_type}">
+                    {subtitles}
+                    Your browser does not support this video.
+                </video>
+            </div>
+            """
             note = ""
         elif "audio" in mime_type:
             icon = "🎵"
             file_type = "Audio"
-            player_tag = f'''
-            <audio id="player" controls autoplay preload="metadata">
-                <source src="/stream/{file_id}" type="{mime_type}">
-                Your browser does not support this audio.
-            </audio>
-            '''
+            player_tag = f"""
+            <div class="player-wrap">
+                <div class="blue-glow"></div>
+                <audio id="player" controls autoplay preload="metadata">
+                    <source src="/stream/{file_id}" type="{mime_type}">
+                    Your browser does not support this audio.
+                </audio>
+            </div>
+            """
             note = ""
         else:
             icon = "📁"
             file_type = "File"
             player_tag = ""
-            note = "<p class='warn'>⚠️ This file type may not play in browser. Use download.</p>"
+            note = "<p class='warn'>⚠️ This file type may not play in browser. You can download it below.</p>"
 
     except Exception as e:
         logger.error(f"video_play error: {e}")
@@ -80,6 +98,7 @@ async def video_play(request):
             align-items: center;
             padding: 20px 15px 40px;
             min-height: 100vh;
+            overflow-x: hidden;
         }}
         .title {{
             color: #2481cc;
@@ -111,12 +130,30 @@ async def video_play(request):
         .info-row:last-child {{ border-bottom: none; }}
         .info-label {{ color: #7fb3d3; }}
         .info-value {{ color: #fff; font-weight: 500; text-align: right; word-break: break-all; }}
-        video, audio {{
+        .player-wrap {{
+            position: relative;
             width: 100%;
             max-width: 850px;
+            margin-bottom: 15px;
+        }}
+        .blue-glow {{
+            position: absolute;
+            left: -35px;
+            top: 20%;
+            width: 140px;
+            height: 260px;
+            background: rgba(40, 128, 255, 0.38);
+            filter: blur(55px);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+        }}
+        video, audio {{
+            position: relative;
+            z-index: 1;
+            width: 100%;
             border-radius: 10px;
             background: #000;
-            margin-bottom: 15px;
         }}
         video {{ border: 2px solid #2481cc; }}
         .warn {{
@@ -153,6 +190,15 @@ async def video_play(request):
         .btn-download {{ background: #27ae60; }}
         .btn-copy {{ background: #2481cc; cursor: pointer; }}
         .copied {{ background: #1a6aaa !important; }}
+        @media (max-width: 480px) {{
+            .info-row {{ font-size: 12px; }}
+            .title {{ font-size: 16px; }}
+            .blue-glow {{
+                left: -55px;
+                width: 120px;
+                height: 220px;
+            }}
+        }}
     </style>
 </head>
 <body>
@@ -203,6 +249,7 @@ async def stream_handler(request):
             return web.Response(text="❌ File not found", status=404)
 
         file_name, mime_type, file_size = _media_info(media)
+
         headers = {
             "Content-Type": mime_type if mime_type != "unknown" else "application/octet-stream",
             "Content-Disposition": f'inline; filename="{file_name}"',
@@ -234,6 +281,7 @@ async def download_handler(request):
             return web.Response(text="❌ File not found", status=404)
 
         file_name, mime_type, file_size = _media_info(media)
+
         headers = {
             "Content-Type": mime_type if mime_type != "unknown" else "application/octet-stream",
             "Content-Disposition": f'attachment; filename="{file_name}"',
