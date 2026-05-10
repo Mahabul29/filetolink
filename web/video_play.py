@@ -12,12 +12,18 @@ def _media_info(media):
     return file_name, mime_type, file_size
 
 
-def _guess_lang_tracks(file_name):
-    base = file_name.rsplit(".", 1)[0]
-    return [
-        {"label": "English", "srclang": "en", "src": f"/subs/{base}.en.vtt"},
-        {"label": "Hindi", "srclang": "hi", "src": f"/subs/{base}.hi.vtt"},
-    ]
+def _is_video_playable(mime_type, file_name):
+    mt = (mime_type or "").lower()
+    fn = (file_name or "").lower()
+    return (
+        "mp4" in mt or
+        "webm" in mt or
+        "ogg" in mt or
+        fn.endswith(".mp4") or
+        fn.endswith(".webm") or
+        fn.endswith(".ogv") or
+        fn.endswith(".ogg")
+    )
 
 
 async def video_play(request):
@@ -36,31 +42,25 @@ async def video_play(request):
         if "video" in mime_type:
             icon = "🎬"
             file_type = "Video"
-            subtitles = ""
-            for tr in _guess_lang_tracks(file_name):
-                subtitles += f'<track label="{tr["label"]}" kind="subtitles" srclang="{tr["srclang"]}" src="{tr["src"]}">'
-            player_tag = f"""
-            <div class="player-wrap">
-                <div class="blue-glow"></div>
+            if _is_video_playable(mime_type, file_name):
+                player_tag = f"""
                 <video id="player" controls autoplay playsinline preload="metadata">
                     <source src="/stream/{file_id}" type="{mime_type}">
-                    {subtitles}
                     Your browser does not support this video.
                 </video>
-            </div>
-            """
-            note = ""
+                """
+                note = ""
+            else:
+                player_tag = ""
+                note = "<p class='warn'>⚠️ This video format may not play in browser. MP4 works best.</p>"
         elif "audio" in mime_type:
             icon = "🎵"
             file_type = "Audio"
             player_tag = f"""
-            <div class="player-wrap">
-                <div class="blue-glow"></div>
-                <audio id="player" controls autoplay preload="metadata">
-                    <source src="/stream/{file_id}" type="{mime_type}">
-                    Your browser does not support this audio.
-                </audio>
-            </div>
+            <audio id="player" controls autoplay preload="metadata">
+                <source src="/stream/{file_id}" type="{mime_type}">
+                Your browser does not support this audio.
+            </audio>
             """
             note = ""
         else:
