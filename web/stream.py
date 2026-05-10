@@ -374,4 +374,4 @@ async def download_handler(request):
 
     except Exception as e:
         logger.error(f"Download error: {e}")
-        return web.Response(text=f"❌ Error: {e}", status=500)
+        return web.Response(text=f"❌ Error: {e}", status=500)      
