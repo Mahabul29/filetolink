@@ -118,7 +118,11 @@ async def video_play(request):
             background: #000;
             margin-bottom: 15px;
         }}
-        video {{ border: 2px solid #2481cc; }}
+        video {{
+            border: none;
+            outline: none;
+            box-shadow: none;
+        }}
         .warn {{
             color: #f39c12;
             background: #1a1200;
