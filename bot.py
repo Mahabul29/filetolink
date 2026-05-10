@@ -1,4 +1,4 @@
-    async def start(self):
+        async def start(self):
         await super().start()
         print("🤖 Bot session started!")
 
@@ -20,4 +20,3 @@
 
         # --- REST OF YOUR WEB SERVER CODE ---
         # (Keep your aiohttp setup here exactly as it was)
-        
