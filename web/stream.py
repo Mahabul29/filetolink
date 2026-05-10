@@ -28,7 +28,7 @@ async def video_player(request):
             file_type = "Document"
 
         can_play = any(x in mime_type for x in ["mp4", "webm", "ogg", "audio"])
-        playable_note = "" if can_play else "<p class='warn'>⚠️ This format may not play in browser. Use VLC / MX Player below.</p>"
+        playable_note = "" if can_play else "<p class='warn'>⚠️ This format may not play in browser. Use an external player below.</p>"
 
     except Exception as e:
         logger.error(f"File info error: {e}")
@@ -40,18 +40,12 @@ async def video_player(request):
         can_play = False
         playable_note = "<p class='warn'>⚠️ Could not fetch file info.</p>"
 
-    # Clean FQDN - remove any protocol prefix or trailing slash
+    # Clean FQDN
     clean_fqdn = FQDN.replace("https://", "").replace("http://", "").rstrip("/")
-
     stream_url   = f"https://{clean_fqdn}/stream/{file_id}"
     download_url = f"https://{clean_fqdn}/dl/{file_id}"
 
-    # Correct Android intent deep links
-    vlc_url = f"intent:{stream_url}#Intent;package=org.videolan.vlc;action=android.intent.action.VIEW;type=video/mp4;end"
-    mx_url  = f"intent:{stream_url}#Intent;package=com.mxtech.videoplayer.ad;action=android.intent.action.VIEW;type=video/mp4;end"
-    sp_url  = f"intent:{stream_url}#Intent;package=com.sp.apps.splayer;action=android.intent.action.VIEW;type=video/mp4;end"
-
-    # Video or audio player tag
+    # Browser player tag
     if "video" in mime_type:
         player_tag = f'<video controls autoplay playsinline><source src="{stream_url}" type="video/mp4">Your browser does not support this video.</video>'
     elif "audio" in mime_type:
@@ -168,18 +162,12 @@ async def video_player(request):
             border: none;
             display: inline-block;
         }}
-        .btn:hover {{
-            opacity: 0.85;
-        }}
-        .btn-download {{
-            background: #27ae60;
-        }}
-        .btn-copy {{
-            background: #2481cc;
-        }}
-        .copied {{
-            background: #1a6aaa !important;
-        }}
+        .btn:hover {{ opacity: 0.85; }}
+        .btn-download {{ background: #27ae60; }}
+        .btn-copy {{ background: #2481cc; }}
+        .copied {{ background: #1a6aaa !important; }}
+
+        /* External Players */
         .player-section {{
             width: 100%;
             max-width: 850px;
@@ -199,50 +187,51 @@ async def video_player(request):
         }}
         .player-buttons {{
             display: flex;
+            flex-direction: column;
             gap: 10px;
-            justify-content: center;
-            flex-wrap: wrap;
         }}
         .player-btn {{
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 16px 10px;
-            border-radius: 14px;
-            text-decoration: none;
-            font-size: 13px;
+            gap: 14px;
+            padding: 14px 18px;
+            border-radius: 12px;
+            font-size: 15px;
             font-weight: bold;
             color: white;
-            flex: 1;
-            min-width: 90px;
-            max-width: 150px;
+            width: 100%;
             transition: opacity 0.2s, transform 0.15s;
+            cursor: pointer;
+            border: none;
+            text-align: left;
         }}
         .player-btn:hover {{
-            opacity: 0.85;
-            transform: scale(1.04);
+            opacity: 0.88;
+            transform: scale(1.02);
         }}
         .player-btn .icon {{
-            font-size: 30px;
+            font-size: 26px;
+            width: 36px;
+            text-align: center;
         }}
-        .btn-vlc {{
-            background: linear-gradient(135deg, #ff7700, #cc5500);
+        .player-btn .label {{
+            flex: 1;
         }}
-        .btn-mx {{
-            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+        .player-btn .arrow {{
+            font-size: 16px;
+            opacity: 0.6;
         }}
-        .btn-sp {{
-            background: linear-gradient(135deg, #9c27b0, #6a0080);
-        }}
+        .btn-vlc {{ background: linear-gradient(135deg, #ff7700, #cc5500); }}
+        .btn-mx  {{ background: linear-gradient(135deg, #1a73e8, #0d47a1); }}
+        .btn-sp  {{ background: linear-gradient(135deg, #2ecc71, #1a8a47); }}
     </style>
 </head>
 <body>
 
     <div class="title">{icon} {file_name}</div>
 
-    <!-- File Info Box -->
+    <!-- File Info -->
     <div class="info-box">
         <div class="info-row">
             <span class="info-label">📄 File Name</span>
@@ -262,63 +251,93 @@ async def video_player(request):
         </div>
     </div>
 
-    <!-- Warning if not browser-playable -->
     {playable_note}
 
-    <!-- Browser Player -->
     {player_tag}
 
-    <!-- Download + Copy Buttons -->
+    <!-- Download + Copy -->
     <div class="top-buttons">
         <a href="{download_url}" class="btn btn-download">⬇ Download</a>
         <button class="btn btn-copy" onclick="copyLink()">🔗 Copy Link</button>
     </div>
 
-    <!-- External Players -->
+    <!-- External Players - vertical list -->
     <div class="player-section">
         <div class="player-title">▶ Open With External Player</div>
         <div class="player-buttons">
-            <a href="{vlc_url}" class="player-btn btn-vlc">
+
+            <button class="player-btn btn-vlc" onclick="openPlayer('org.videolan.vlc')">
                 <span class="icon">🟠</span>
-                VLC Player
-            </a>
-            <a href="{mx_url}" class="player-btn btn-mx">
+                <span class="label">VLC Player</span>
+                <span class="arrow">▶</span>
+            </button>
+
+            <button class="player-btn btn-mx" onclick="openPlayer('com.mxtech.videoplayer.ad')">
                 <span class="icon">🔵</span>
-                MX Player
-            </a>
-            <a href="{sp_url}" class="player-btn btn-sp">
-                <span class="icon">🟣</span>
-                SP Player
-            </a>
+                <span class="label">MX Player</span>
+                <span class="arrow">▶</span>
+            </button>
+
+            <button class="player-btn btn-sp" onclick="openPlayer('com.splayer.splayer')">
+                <span class="icon">🟢</span>
+                <span class="label">SPlayer</span>
+                <span class="arrow">▶</span>
+            </button>
+
         </div>
     </div>
 
     <script>
+        const streamUrl = "{stream_url}";
+        const downloadUrl = "{download_url}";
+
+        function openPlayer(pkg) {{
+            const intentUrl = "intent:" + streamUrl + "#Intent;package=" + pkg + ";action=android.intent.action.VIEW;type=video/mp4;S.title=Streaming;end";
+            const marketUrl = "https://play.google.com/store/apps/details?id=" + pkg;
+
+            let appOpened = false;
+
+            const onBlur = () => {{ appOpened = true; }};
+            window.addEventListener('blur', onBlur);
+
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            document.body.appendChild(iframe);
+            iframe.src = intentUrl;
+
+            setTimeout(() => {{
+                window.removeEventListener('blur', onBlur);
+                document.body.removeChild(iframe);
+                if (!appOpened) {{
+                    if (confirm('App not installed. Open Play Store to install?')) {{
+                        window.open(marketUrl, '_blank');
+                    }}
+                }}
+            }}, 2500);
+        }}
+
         function copyLink() {{
-            navigator.clipboard.writeText("{download_url}").then(() => {{
-                const btn = document.querySelector('.btn-copy');
-                btn.textContent = '✅ Copied!';
-                btn.classList.add('copied');
-                setTimeout(() => {{
-                    btn.textContent = '🔗 Copy Link';
-                    btn.classList.remove('copied');
-                }}, 2000);
+            navigator.clipboard.writeText(downloadUrl).then(() => {{
+                showCopied();
             }}).catch(() => {{
-                // Fallback for older browsers
                 const el = document.createElement('textarea');
-                el.value = "{download_url}";
+                el.value = downloadUrl;
                 document.body.appendChild(el);
                 el.select();
                 document.execCommand('copy');
                 document.body.removeChild(el);
-                const btn = document.querySelector('.btn-copy');
-                btn.textContent = '✅ Copied!';
-                btn.classList.add('copied');
-                setTimeout(() => {{
-                    btn.textContent = '🔗 Copy Link';
-                    btn.classList.remove('copied');
-                }}, 2000);
+                showCopied();
             }});
+        }}
+
+        function showCopied() {{
+            const btn = document.querySelector('.btn-copy');
+            btn.textContent = '✅ Copied!';
+            btn.classList.add('copied');
+            setTimeout(() => {{
+                btn.textContent = '🔗 Copy Link';
+                btn.classList.remove('copied');
+            }}, 2000);
         }}
     </script>
 
@@ -328,7 +347,7 @@ async def video_player(request):
 
 
 async def stream_handler(request):
-    """Raw stream endpoint — used by browser video tag and external players"""
+    """Raw stream for browser video tag and external players"""
     file_id = request.match_info.get('file_id')
     bot_client = request.app["bot_client"]
 
@@ -341,7 +360,6 @@ async def stream_handler(request):
 
         file_size = getattr(media, "file_size", 0)
 
-        # Handle Range requests for video seeking
         range_header = request.headers.get("Range")
         offset = 0
         end = file_size - 1
@@ -383,7 +401,7 @@ async def stream_handler(request):
 
 
 async def download_handler(request):
-    """Force download with real filename and mime type"""
+    """Force download with real filename"""
     file_id = request.match_info.get('file_id')
     bot_client = request.app["bot_client"]
 
