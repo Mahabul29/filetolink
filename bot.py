@@ -1,74 +1,37 @@
-import os
-import asyncio
-from pyrogram import Client
-from aiohttp import web
-from config import API_ID, API_HASH, BOT_TOKEN, LOG_CHANNEL, BIN_CHANNEL, PORT, FQDN
-
-class Bot(Client):
-    def __init__(self):
-        super().__init__(
-            name="Udybot",
-            api_id=API_ID,
-            api_hash=API_HASH,
-            bot_token=BOT_TOKEN,
-            plugins=dict(root="plugins")
-        )
-
     async def start(self):
         await super().start()
         print("🤖 Bot session started!")
 
-        # --- THE AGGRESSIVE PEER FIX ---
-        print("🔄 Warming up session and fetching dialogs...")
+        # --- THE STARTUP HANDSHAKE ---
+        # This forces the bot to 'see' its inbox and find your channels automatically
+        print("🔄 Waking up channel connections...")
         try:
-            # Forces Pyrogram to cache the access hashes for all chats
+            # We crawl the first 20 dialogs to find your channels
             async for dialog in self.get_dialogs(limit=20):
                 pass 
             
             for channel_id in [LOG_CHANNEL, BIN_CHANNEL]:
                 try:
                     chat = await self.get_chat(channel_id)
-                    print(f"✅ Successfully linked to: {chat.title} ({channel_id})")
+                    print(f"✅ Connection Verified: {chat.title} ({channel_id})")
+                    
+                    # Optional: Send a heartbeat to the Log Channel only
                     if channel_id == LOG_CHANNEL:
-                        await self.send_message(LOG_CHANNEL, "🚀 **Bot Online: Peer Connection Verified.**")
+                        await self.send_message(LOG_CHANNEL, "🚀 **Bot Restarted: Peer Connection Verified.**")
                 except Exception as e:
-                    print(f"❌ Peer ID Error for {channel_id}: {e}")
+                    print(f"⚠️ Peer ID Error for {channel_id}: {e}")
         except Exception as e:
             print(f"⚠️ Dialog fetch failed: {e}")
 
-        # --- WEB SERVER SETUP ---
+        # --- YOUR EXISTING WEB SERVER CODE ---
         bot_ref = self
 
         async def health(request):
-            return web.Response(text="Bot is Running and Peers are Linked!")
+            return web.Response(text="Bot is Running")
 
         async def stream_file(request):
-            try:
-                file_id = int(request.match_info["file_id"])
-                # Look in BIN_CHANNEL for the stored media
-                msg = await bot_ref.get_messages(BIN_CHANNEL, file_id)
-                
-                if not msg or not msg.media:
-                    return web.Response(status=404, text="File not found")
-
-                media = msg.document or msg.video or msg.audio
-                file_name = getattr(media, "file_name", "file")
-                mime = getattr(media, "mime_type", "application/octet-stream")
-
-                headers = {
-                    "Content-Disposition": f'attachment; filename="{file_name}"',
-                    "Content-Type": mime,
-                }
-                response = web.StreamResponse(headers=headers)
-                await response.prepare(request)
-
-                async for chunk in bot_ref.stream_media(msg):
-                    await response.write(chunk)
-
-                await response.write_eof()
-                return response
-            except Exception as e:
-                return web.Response(status=500, text=str(e))
+            # ... (keep your existing stream_file logic here) ...
+            pass
 
         app = web.Application()
         app.router.add_get("/", health)
@@ -80,8 +43,5 @@ class Bot(Client):
         await site.start() 
         
         print(f"🚀 Health Check & Stream live on port {PORT}")
-        print(f"🌐 URL: https://{FQDN}")
-
-    async def stop(self, *args):
-        await super().stop()
+        print(f"✅ Bot is fully online!")
         
